@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Menu } from "lucide-react"
 import Tabs, { TabsTrigger } from "@/components/ui/tabs"
+import { useState, useMemo } from "react"
 
 type Order = {
   id: string
@@ -71,6 +72,22 @@ function statusVariant(status: Order["status"]) {
 }
 
 export default function OrdersPage() {
+  const [tab, setTab] = useState<string>("today")
+
+  const filteredOrders = useMemo(() => {
+    switch (tab) {
+      case "confirmed":
+        return mockOrders.filter((o) => o.status === "CONFIRMED")
+      case "declined":
+        return mockOrders.filter((o) => o.status === "DECLINED")
+      case "yesterday":
+        // Mock data: treat WAITING as yesterday for demo
+        return mockOrders.filter((o) => o.status === "WAITING")
+      case "today":
+      default:
+        return mockOrders.filter((o) => o.status === "UPCOMING" || o.status === "CONFIRMED" || o.status === "WAITING" || o.status === "DECLINED")
+    }
+  }, [tab])
   return (
     <div className="px-4 pt-6 max-w-xl mx-auto">
       <header className="flex items-center justify-between mb-4">
@@ -81,7 +98,7 @@ export default function OrdersPage() {
       </header>
 
       <nav className="mb-4">
-        <Tabs defaultValue="today">
+        <Tabs value={tab} onValueChange={setTab}>
           <div className="flex gap-2 overflow-x-auto">
             <TabsTrigger value="today">Today</TabsTrigger>
             <TabsTrigger value="yesterday">Yesterday</TabsTrigger>
@@ -92,7 +109,7 @@ export default function OrdersPage() {
       </nav>
 
       <section className="flex flex-col gap-4">
-        {mockOrders.map((o) => (
+  {filteredOrders.map((o) => (
           <Card key={o.id} className="flex flex-row items-stretch">
             <div className="flex-1">
               <CardHeader className="py-1.5">

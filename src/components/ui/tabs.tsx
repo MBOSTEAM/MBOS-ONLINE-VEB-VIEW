@@ -7,16 +7,18 @@ type TabsContextType = {
 
 const TabsContext = createContext<TabsContextType | undefined>(undefined)
 
-export function Tabs({ defaultValue, value, onValueChange, children }: {
+export function Tabs({ defaultValue, value, onValueChange, onChange, children }: {
   defaultValue?: string
   value?: string
   onValueChange?: (v: string) => void
+  onChange?: (v: string) => void
   children: React.ReactNode
 }) {
   const [internal, setInternal] = useState<string>(defaultValue ?? "")
   const current = value ?? internal
   function handleChange(v: string) {
     onValueChange?.(v)
+    onChange?.(v)
     setInternal(v)
   }
 
@@ -42,8 +44,11 @@ export function TabsTrigger({ value, children, className = "" }: { value: string
   return (
     <button
       type="button"
-      onClick={() => ctx.onChange(value)}
-      className={`${base} ${active ? activeCls : inactiveCls} ${className}`}
+  onClick={() => ctx.onChange(value)}
+  aria-pressed={active}
+  role="tab"
+  aria-selected={active}
+  className={`${base} ${active ? activeCls : inactiveCls} ${className}`}
     >
       {children}
     </button>

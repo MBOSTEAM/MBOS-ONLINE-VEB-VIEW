@@ -6,10 +6,12 @@ export const authEndpoints = {
 } as const
 
 export const userEndpoints = {
-	profile: '/api/v1/users/auth/profile',
+	profile: '/api/v1/users/profile',
 	vehicleParams: '/api/v1/users/vehicle-params',
 	vehicles: '/api/v1/users/vehicles',
-	vehicle: (id: string) => `/api/v1/users/vehicles/${id}`
+	vehicle: (id: string) => `/api/v1/users/vehicles/${id}`,
+	updatePhone: '/api/v1/users/profile/phone-number',
+	verifyPhone: '/api/v1/users/profile/phone-number/verify-otp'
 } as const
 
 export const stationEndpoints = {
