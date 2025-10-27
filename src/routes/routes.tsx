@@ -1,7 +1,7 @@
 // import { Layout } from '@/components/layout/layout'
 import { Suspense } from '@/shared/ui/suspense'
 import { createBrowserRouter } from 'react-router-dom'
-import { Auth, Home, Profile, VerifyPhone, SetupProfile } from './lazy-pages'
+import { Auth, Home, Profile, VerifyPhone, SetupProfile, Orders } from './lazy-pages'
 import { Layout } from '@/shared/layout/layout'
 
 
@@ -39,6 +39,14 @@ export const router = createBrowserRouter([
 				element: (
 					<Suspense>
 						<Profile />
+					</Suspense>
+				)
+			},
+			{
+				path: '/orders',
+				element: (
+					<Suspense>
+						<Orders />
 					</Suspense>
 				)
 			},

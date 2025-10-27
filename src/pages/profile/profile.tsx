@@ -7,6 +7,7 @@ import {
   Mail,
   DoorOpen,
 } from "lucide-react"
+import { Link } from 'react-router-dom'
 
 export default function ProfilePage() {
   return (
@@ -55,18 +56,19 @@ export default function ProfilePage() {
         {/* First Group */}
         <div className="bg-muted rounded-xl divide-y divide-border">
           {[
-            { icon: <User className="w-5 h-5" />, text: "Profile" },
-            { icon: <Settings className="w-5 h-5" />, text: "Orders" },
-            { icon: <Car className="w-5 h-5" />, text: "Vehicles" },
-            { icon: <Users className="w-5 h-5" />, text: "Referrals" },
+            { icon: <User className="w-5 h-5" />, text: "Profile", to: '/profile' },
+            { icon: <Settings className="w-5 h-5" />, text: "Orders", to: '/orders' },
+            { icon: <Car className="w-5 h-5" />, text: "Vehicles", to: '/vehicles' },
+            { icon: <Users className="w-5 h-5" />, text: "Referrals", to: '/referrals' },
           ].map((item) => (
-            <div
+            <Link
               key={item.text}
+              to={item.to ?? '#'}
               className="flex items-center gap-3 px-4 py-3 text-foreground hover:bg-accent rounded-xl transition"
             >
               {item.icon}
               <span className="text-base font-medium">{item.text}</span>
-            </div>
+            </Link>
           ))}
         </div>
 
