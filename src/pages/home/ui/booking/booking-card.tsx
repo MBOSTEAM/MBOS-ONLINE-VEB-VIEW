@@ -24,12 +24,38 @@ export default function BookingCard() {
 
   const orders = ordersData?.data || []
   // Filter for active orders (not completed, cancelled, or failed)
-  const activeOrder = orders.find(order => 
-    !['completed', 'cancelled', 'failed'].includes(order.status)
-  )
-  
-  if (!activeOrder) {
-    return null // No active orders
+  const activeStatuses = new Set([
+    'confirmed',
+    'pending',
+    'in_progress',
+    'customer_arrived',
+  ])
+
+  const activeOrder: any = orders.find((order: any) => activeStatuses.has(order?.status))
+
+  // If there are no active orders, show placeholder (same UI as before)
+  if (orders.length === 0 || !activeOrder) {
+    return (
+      <Card className="overflow-hidden border-0 shadow-sm bg-muted py-3 mt-10">
+        <div className="flex items-stretch">
+          <div className="flex-1 p-3">
+            <Badge className="bg-green-500 hover:bg-green-600 text-white mb-3 inline-block">CONFIRMED</Badge>
+            <div>
+              <h3 className="font-bold text-lg">Classic Hairstyle + Colorizing</h3>
+              <p className="text-base text-muted-foreground mt-1">Gozallik saloni</p>
+            </div>
+          </div>
+
+          <div className="w-px bg-border"></div>
+
+          <div className="flex flex-col items-center justify-center px-4 py-3 min-w-fit">
+            <div className="text-sm font-semibold text-foreground">JUL</div>
+            <div className="text-3xl font-bold text-foreground leading-none">23</div>
+            <div className="text-xs text-muted-foreground mt-2">15:45</div>
+          </div>
+        </div>
+      </Card>
+    ) // No active orders
   }
 
   const getStatusBadge = (status: string) => {
@@ -46,7 +72,7 @@ export default function BookingCard() {
     return statusMap[status] || { label: status.toUpperCase(), className: 'bg-gray-500 text-white' }
   }
 
-  const scheduledDate = new Date(activeOrder.scheduled_datetime)
+  const scheduledDate = new Date(activeOrder?.scheduled_datetime || Date.now())
   const month = scheduledDate.toLocaleString('ru-RU', { month: 'short' }).toUpperCase()
   const day = scheduledDate.getDate()
   const time = scheduledDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
