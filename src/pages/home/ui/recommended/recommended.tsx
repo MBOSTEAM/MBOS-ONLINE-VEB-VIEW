@@ -77,23 +77,23 @@ export default function Recommended() {
                           {station.current_queue && station.current_queue > 0 && `${station.current_queue} navbat`}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                      <div className="flex items-center gap-1 text-base text-muted-foreground mt-1">
                         <MapPin className="w-4 h-4" />
                         <span className="line-clamp-1">{station.address || 'Manzil ko\'rsatilmagan'}</span>
                       </div>
                       {station.distance && (
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                        <div className="flex items-center gap-1 text-base text-muted-foreground mt-1">
                           <span>{(station.distance / 1000).toFixed(1)} km uzoqlikda</span>
                         </div>
                       )}
                       <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center gap-1">
                           <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                          <span className="text-sm font-medium text-foreground">
+                          <span className="text-base font-medium text-foreground">
                             {station.rating ? station.rating.toFixed(1) : '0.0'}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1 text-base font-bold text-muted-foreground">
                           <Clock className="w-3 h-3" />
                           <span>{extractTime(station.work_time_today?.from || '')} - {extractTime(station.work_time_today?.to || '')} </span>
                         </div>
