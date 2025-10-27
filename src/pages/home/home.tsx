@@ -1,7 +1,13 @@
+
+
 const Home = () => {
-  return (
-    <div>Home</div>
-  )
+
+
+	return (
+		<main className='h-full flex flex-col'>
+		dwdw
+		</main>
+	)
 }
 
 export default Home

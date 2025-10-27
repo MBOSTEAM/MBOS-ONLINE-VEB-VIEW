@@ -1,13 +1,14 @@
 // import { Layout } from '@/components/layout/layout'
 import { Suspense } from '@/shared/ui/suspense'
 import { createBrowserRouter } from 'react-router-dom'
-import { Home, Profile } from './lazy-pages'
+import { Auth, Home, Profile, VerifyPhone, SetupProfile } from './lazy-pages'
+import { Layout } from '@/shared/layout/layout'
 
 
 export const router = createBrowserRouter([
 	{
 		path: '',
-		// element: <Layout />,
+		element: <Layout />,
 		children: [
 			{
 				path: '/'
@@ -38,6 +39,30 @@ export const router = createBrowserRouter([
 				element: (
 					<Suspense>
 						<Profile />
+					</Suspense>
+				)
+			},
+			{
+				path: '/login',
+				element: (
+					<Suspense>
+						<Auth />
+					</Suspense>
+				)
+			},
+			{
+				path: '/verify-phone',
+				element: (
+					<Suspense>
+						<VerifyPhone />
+					</Suspense>
+				)
+			},
+			{
+				path: '/setup-profile',
+				element: (
+					<Suspense>
+						<SetupProfile />
 					</Suspense>
 				)
 			},
