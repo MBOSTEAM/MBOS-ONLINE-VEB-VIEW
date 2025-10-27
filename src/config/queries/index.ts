@@ -1,6 +1,6 @@
 export { useSendOtp, useVerifyOtp, useRefreshToken, useLogout } from './auth/auth.queries'
 export { useUserProfile, useUpdateProfile, useUpdatePhoneNumber, useVerifyPhoneNumber } from './users/profile.queries'
-export { useVehicleParams, useUserVehicles, useAddVehicle, useUpdateVehicle, useDeleteVehicle } from './vehicles/vehicles.queries'
+export { useVehicleParams, useUserVehicles, useAddVehicle, useUpdateVehicle, useDeleteVehicle, useBrandsInfinite, useModelsByBrandInfinite } from './vehicles/vehicles.queries'
 export { useStations, useStationDetails, useStationTimeSlots, useStationsHighRating, useStationsClosest } from './stations/station.queries'
 export { useOrders, useOrderDetails, useCreateOrder, useCancelOrder, useMarkArrival } from './orders/order.queries'
 export { useWallet, useTransactions, useTopUpWallet } from './wallet/wallet.queries'

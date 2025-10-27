@@ -56,7 +56,6 @@ const VerifyPhone = () => {
 				otp: otpCode
 			}, {
 				onSuccess: (response) => {
-					console.log('OTP verified successfully:', response)
 					if (response.data.user.is_new_user) {
 						navigate('/setup-profile')
 					} else {
@@ -74,7 +73,7 @@ const VerifyPhone = () => {
 		setTimeLeft(58)
 		setCanResend(false)
 		setOtp(['', '', '', '', '', ''])
-		
+
 		sendOtp(phoneNumber, {
 			onSuccess: (response) => {
 				setVerificationToken(response.data.verification_token)
@@ -134,9 +133,9 @@ const VerifyPhone = () => {
 
 					<div className='text-center'>
 						{canResend ? (
-							<Button 
-								variant='link' 
-								onClick={handleResend} 
+							<Button
+								variant='link'
+								onClick={handleResend}
 								disabled={isResending}
 								className='text-sm'
 							>

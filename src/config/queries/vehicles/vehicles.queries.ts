@@ -1,6 +1,6 @@
 import { axiosPrivate } from '@/config/api/api'
 import { userEndpoints } from '@/config/api/endpoint'
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
+import { useMutation, useQueryClient, useQuery, useInfiniteQuery } from '@tanstack/react-query'
 import { showSuccess, showError } from '@/shared/utils/notifications'
 
 export interface ApiResponse<T> {
@@ -158,6 +158,85 @@ export const useDeleteVehicle = () => {
         onError: () => {
             showError('Transport vositasi o\'chirishda xatolik yuz berdi')
         }
+    })
+}
+
+// Infinite scroll hooks for brands and models
+export const useBrandsInfinite = (limit: number = 20) => {
+    return useInfiniteQuery({
+        queryKey: ['brands-infinite'],
+        queryFn: async ({ pageParam = 1 }) => {
+            try {
+                const queryParams = new URLSearchParams()
+                queryParams.append('page', String(pageParam))
+                queryParams.append('limit', String(limit))
+
+                const url = `${userEndpoints.vehicleParams}?${queryParams.toString()}`
+                
+                const response = await axiosPrivate.get(url)
+                
+                // API response might not match expected structure
+                // Try to extract data properly
+                const data = response.data
+                
+                // If response.data is an object with brands array
+                if (data.data && typeof data.data === 'object' && !Array.isArray(data.data)) {
+                    // Extract brands if available
+                    if (data.data.brands && Array.isArray(data.data.brands)) {
+                        return {
+                            success: true,
+                            data: data.data.brands,
+                            pagination: data.pagination || { page: pageParam, limit, total: data.data.brands.length, total_pages: 1 }
+                        }
+                    }
+                }
+                
+                // If data is already in the expected format
+                return data
+            } catch (error) {
+                console.error('Error fetching brands:', error)
+                throw error
+            }
+        },
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => {
+            if (!lastPage || !lastPage.pagination) return undefined
+            if (lastPage.pagination.page < lastPage.pagination.total_pages) {
+                return lastPage.pagination.page + 1
+            }
+            return undefined
+        }
+    })
+}
+
+export const useModelsByBrandInfinite = (brandId: string, limit: number = 20) => {
+    return useInfiniteQuery({
+        queryKey: ['models-by-brand-infinite', brandId],
+        queryFn: async ({ pageParam = 1 }) => {
+            try {
+                const queryParams = new URLSearchParams()
+                queryParams.append('page', String(pageParam))
+                queryParams.append('limit', String(limit))
+
+                const url = `${userEndpoints.vehicleParamById(brandId)}?${queryParams.toString()}`
+                
+                const response = await axiosPrivate.get<PaginatedApiResponse<Array<string | { id: string; name: string }>>>(url)
+                
+                return response.data
+            } catch (error) {
+                console.error('Error fetching models:', error)
+                throw error
+            }
+        },
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => {
+            if (!lastPage || !lastPage.pagination) return undefined
+            if (lastPage.pagination.page < lastPage.pagination.total_pages) {
+                return lastPage.pagination.page + 1
+            }
+            return undefined
+        },
+        enabled: !!brandId
     })
 }
 

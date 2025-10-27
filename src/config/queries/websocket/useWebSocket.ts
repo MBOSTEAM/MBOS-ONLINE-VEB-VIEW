@@ -64,7 +64,6 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
             ws.current = new WebSocket(url)
 
             ws.current.onopen = () => {
-                console.log('WebSocket connected')
                 setIsConnected(true)
                 reconnectAttempts.current = 0
 
@@ -99,7 +98,6 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
                             }
                             break
                         default:
-                            console.log('Unknown WebSocket message type:', message.type)
                     }
                 } catch (error) {
                     console.error('Error parsing WebSocket message:', error)
@@ -114,7 +112,6 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
             }
 
             ws.current.onclose = () => {
-                console.log('WebSocket disconnected')
                 setIsConnected(false)
 
                 if (enabled && reconnectAttempts.current < 5) {
@@ -122,7 +119,6 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
                     reconnectAttempts.current++
                     
                     reconnectTimeoutRef.current = setTimeout(() => {
-                        console.log(`Reconnecting... Attempt ${reconnectAttempts.current}`)
                         connect()
                     }, delay)
                 }

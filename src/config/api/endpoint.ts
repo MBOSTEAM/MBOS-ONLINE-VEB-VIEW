@@ -9,6 +9,7 @@ export const userEndpoints = {
 	profile: '/api/v1/users/profile',
 	updateProfile: '/api/v1/users/auth/profile',
 	vehicleParams: '/api/v1/users/vehicle-params',
+	vehicleParamById: (id: string) => `/api/v1/users/vehicle-params/${id}`,
 	vehicles: '/api/v1/users/vehicles',
 	vehicle: (id: string) => `/api/v1/users/vehicles/${id}`,
 	updatePhone: '/api/v1/users/profile/phone-number',
