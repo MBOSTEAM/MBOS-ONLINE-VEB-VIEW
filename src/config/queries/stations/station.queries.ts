@@ -72,25 +72,35 @@ export interface RevenueDistribution {
 
 export interface StationListItem {
     id: string
-    name: string
-    address: string
-    distance: number
-    latitude: number
-    longitude: number
-    preview_photos: PreviewPhoto[]
-    rating: number
-    reviews_count: number
-    is_open: boolean
-    current_queue: number
-    estimated_wait: number
+    title: string | null
+    address: string | null
+    distance: number | null
+    latitude: number | null
+    longitude: number | null
+    preview_photos?: PreviewPhoto[]
+    preview_image?: string | null
+    rating: number | null
+    reviews_count: number | null
+    is_open: boolean | null
+    current_queue: number | null
+    estimated_wait: number | null
     work_time_today: WorkTimeToday
     fuel_types: FuelType[]
 }
 
-export interface StationDetails extends Omit<StationListItem, 'fuel_types' | 'work_time_today'> {
-    description: string
-    phone: string
-    is_verified: boolean
+export interface StationDetails extends Omit<StationListItem, 'fuel_types' | 'work_time_today' | 'preview_photos' | 'preview_image'> {
+    title: string | null
+    description: string | null
+    address: string | null
+    latitude: number | null
+    longitude: number | null
+    phone: string | null
+    preview_photos?: PreviewPhoto[]
+    rating: number | null
+    reviews_count: number | null
+    is_verified: boolean | null
+    is_open: boolean | null
+    current_queue: number | null
     work_times: WorkTime[]
     fuel_types: FuelTypeWithUnits[]
 }
@@ -108,34 +118,73 @@ export interface TimeSlotsResponse {
 }
 
 export interface ListStationsParams {
-    lat?: number
-    lng?: number
-    radius?: number
+    page?: number
+    limit?: number
     fuel_type?: string
-    is_open?: boolean
+    is_open?: string
+    category_id?: string
+    type_id?: string
+    region_id?: string
+    district_id?: string
+    rating?: string
 }
 
 export interface TimeSlotsParams {
     date: string
     fuel_type_id: string
+    page?: number
+    limit?: number
 }
 
 export const useStations = (params?: ListStationsParams) => {
     return useQuery({
         queryKey: [stationEndpoints.all, params],
-        queryFn: async (): Promise<PaginatedApiResponse<StationListItem[]>> => {
-            const queryParams = new URLSearchParams()
-            if (params?.lat) queryParams.append('lat', String(params.lat))
-            if (params?.lng) queryParams.append('lng', String(params.lng))
-            if (params?.radius) queryParams.append('radius', String(params.radius))
-            if (params?.fuel_type) queryParams.append('fuel_type', params.fuel_type)
-            if (params?.is_open !== undefined) queryParams.append('is_open', String(params.is_open))
+        queryFn: async () => {
+            try {
+                const queryParams = new URLSearchParams()
+                if (params?.page) queryParams.append('page', String(params.page))
+                if (params?.limit) queryParams.append('limit', String(params.limit))
+                if (params?.fuel_type) queryParams.append('fuel_type', params.fuel_type)
+                if (params?.category_id) queryParams.append('category_id', params.category_id)
+                if (params?.type_id) queryParams.append('type_id', params.type_id)
+                if (params?.region_id) queryParams.append('region_id', params.region_id)
+                if (params?.district_id) queryParams.append('district_id', params.district_id)
+                if (params?.rating) queryParams.append('rating', params.rating)
 
-            const queryString = queryParams.toString()
-            const url = queryString ? `${stationEndpoints.all}?${queryString}` : stationEndpoints.all
+                const queryString = queryParams.toString()
+                const url = queryString ? `${stationEndpoints.all}?${queryString}` : stationEndpoints.all
 
-            const { data } = await axiosPrivate.get<PaginatedApiResponse<StationListItem[]>>(url)
-            return data
+                const response = await axiosPrivate.get(url)
+                
+                // API returns: { success, data: StationListItem[], pagination, error, meta, validation_error }
+                if (response.data?.success && Array.isArray(response.data.data)) {
+                    return {
+                        success: response.data.success,
+                        data: response.data.data,
+                        pagination: response.data.pagination || {
+                            page: params?.page || 1,
+                            limit: params?.limit || 10,
+                            total: response.data.data.length,
+                            total_pages: 1
+                        }
+                    }
+                }
+                
+                // Return empty data if API call succeeded but no data
+                return {
+                    success: false,
+                    data: [],
+                    pagination: { page: 1, limit: 10, total: 0, total_pages: 0 }
+                }
+            } catch (error: any) {
+                // If API returns error (like validation error), return empty array
+                console.error('Error fetching stations:', error?.response?.data || error)
+                return {
+                    success: false,
+                    data: [],
+                    pagination: { page: 1, limit: 10, total: 0, total_pages: 0 }
+                }
+            }
         }
     })
 }
@@ -160,6 +209,8 @@ export const useStationTimeSlots = (id: string, params: TimeSlotsParams) => {
             const queryParams = new URLSearchParams()
             queryParams.append('date', params.date)
             queryParams.append('fuel_type_id', params.fuel_type_id)
+            if (params.page) queryParams.append('page', String(params.page))
+            if (params.limit) queryParams.append('limit', String(params.limit))
 
             const url = `${stationEndpoints.timeSlots(id)}?${queryParams.toString()}`
 
@@ -167,6 +218,42 @@ export const useStationTimeSlots = (id: string, params: TimeSlotsParams) => {
             return data
         },
         enabled: !!id && !!params.date && !!params.fuel_type_id
+    })
+}
+
+export const useStationsHighRating = (params?: { page?: number; limit?: number; rating?: string; region_id?: string }) => {
+    return useQuery({
+        queryKey: ['/api/v1/stations/high-rating', params],
+        queryFn: async (): Promise<PaginatedApiResponse<StationListItem[]>> => {
+            const queryParams = new URLSearchParams()
+            if (params?.page) queryParams.append('page', String(params.page))
+            if (params?.limit) queryParams.append('limit', String(params.limit))
+            if (params?.rating) queryParams.append('rating', params.rating)
+            if (params?.region_id) queryParams.append('region_id', params.region_id)
+
+            const queryString = queryParams.toString()
+            const url = queryString ? `/api/v1/stations/high-rating?${queryString}` : '/api/v1/stations/high-rating'
+
+            const { data } = await axiosPrivate.get<PaginatedApiResponse<StationListItem[]>>(url)
+            return data
+        }
+    })
+}
+
+export const useStationsClosest = (params?: { page?: number; limit?: number }) => {
+    return useQuery({
+        queryKey: ['/api/v1/stations/closest', params],
+        queryFn: async (): Promise<PaginatedApiResponse<StationListItem[]>> => {
+            const queryParams = new URLSearchParams()
+            if (params?.page) queryParams.append('page', String(params.page))
+            if (params?.limit) queryParams.append('limit', String(params.limit))
+
+            const queryString = queryParams.toString()
+            const url = queryString ? `/api/v1/stations/closest?${queryString}` : '/api/v1/stations/closest'
+
+            const { data } = await axiosPrivate.get<PaginatedApiResponse<StationListItem[]>>(url)
+            return data
+        }
     })
 }
 
