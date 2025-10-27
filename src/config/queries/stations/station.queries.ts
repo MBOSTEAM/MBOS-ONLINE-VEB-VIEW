@@ -1,5 +1,5 @@
-import { axiosPrivate } from '../../api/api'
-import { stationEndpoints } from '../../api/endpoint'
+import { axiosPrivate } from '@/config/api/api'
+import { stationEndpoints } from '@/config/api/endpoint'
 import { useQuery } from '@tanstack/react-query'
 
 export interface ApiResponse<T> {

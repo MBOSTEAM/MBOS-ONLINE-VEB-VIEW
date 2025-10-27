@@ -2,14 +2,28 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useSendOtp } from '@/config/queries/auth/auth.queries'
 
 const SignIn = () => {
   const navigate = useNavigate()
   const [phoneNumber, setPhoneNumber] = useState('')
+  const { mutate: sendOtp, isPending } = useSendOtp()
 
   const handleNext = () => {
     if (phoneNumber.trim()) {
-      navigate('/verify-phone', { state: { phoneNumber } })
+      sendOtp(phoneNumber, {
+        onSuccess: (response) => {
+          navigate('/verify-phone', { 
+            state: { 
+              phoneNumber,
+              verification_token: response.data.verification_token
+            } 
+          })
+        },
+        onError: (error) => {
+          console.error('Error sending OTP:', error)
+        }
+      })
     }
   }
   return (
@@ -48,9 +62,10 @@ const SignIn = () => {
               {/* Next button */}
               <Button
                 onClick={handleNext}
-                className="w-full bg-black text-white hover:bg-gray-900 rounded-lg py-3 font-semibold text-base"
+                disabled={isPending || !phoneNumber.trim()}
+                className="w-full bg-black text-white hover:bg-gray-900 rounded-lg py-3 font-semibold text-base disabled:opacity-50"
               >
-                Next
+                {isPending ? 'Yuborilmoqda...' : 'Keyingi'}
               </Button>
             </div>
           </div>

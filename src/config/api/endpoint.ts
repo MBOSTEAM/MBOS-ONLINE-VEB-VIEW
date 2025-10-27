@@ -6,7 +6,7 @@ export const authEndpoints = {
 } as const
 
 export const userEndpoints = {
-	profile: '/api/v1/users/profile',
+	profile: '/api/v1/users/auth/profile',
 	vehicleParams: '/api/v1/users/vehicle-params',
 	vehicles: '/api/v1/users/vehicles',
 	vehicle: (id: string) => `/api/v1/users/vehicles/${id}`
@@ -38,7 +38,7 @@ export const notificationEndpoints = {
 } as const
 
 export const uploadEndpoints = {
-	image: '/api/v1/upload/image'
+	image: '/api/v1/file/upload'
 } as const
 
 export const feedbackEndpoints = {

@@ -1,7 +1,7 @@
-import { axiosPrivate } from '../../api/api'
-import { feedbackEndpoints } from '../../api/endpoint'
+import { axiosPrivate } from '@/config/api/api'
+import { feedbackEndpoints } from '@/config/api/endpoint'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
-import { showSuccess, showError } from '../../../shared/utils/notifications'
+import { showSuccess, showError } from '@/shared/utils/notifications'
 
 export interface ApiResponse<T> {
     success: boolean

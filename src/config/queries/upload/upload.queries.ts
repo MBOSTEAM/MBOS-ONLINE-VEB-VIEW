@@ -1,7 +1,7 @@
-import { axiosPrivate } from '../../api/api'
-import { uploadEndpoints } from '../../api/endpoint'
+import { axiosPrivate } from '@/config/api/api'
+import { uploadEndpoints } from '@/config/api/endpoint'
 import { useMutation } from '@tanstack/react-query'
-import { showSuccess, showError } from '../../../shared/utils/notifications'
+import { showSuccess, showError } from '@/shared/utils/notifications'
 
 export interface ApiResponse<T> {
     success: boolean
