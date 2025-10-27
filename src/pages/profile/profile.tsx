@@ -39,16 +39,19 @@ export default function Profile() {
   return (
     <div className="max-w-lg mx-auto p-4 space-y-4 bg-background">
       {/* Header */}
-      <div className="flex justify-center items-center">
-        <div className="mb-12 flex items-center justify-center gap-2">
+      <div className="flex justify-between items-center mb-12">
+        <Link to="/" className="p-2 rounded-full bg-muted">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 18l-6-6 6-6" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </Link>
+        <div className="flex items-center justify-center gap-2">
           <div className="bg-black text-white px-3 py-1 rounded text-sm font-bold">MBOS</div>
           <span className="text-gray-900 font-medium">Online</span>
-          <div className="flex items-center justify-end relative left-30">
-            <button onClick={handleLogout} className="cursor-pointer">
-              <DoorOpen className="w-5 h-5 text-muted-foreground" />
-            </button>
-          </div>
         </div>
+        <button onClick={handleLogout} className="p-2 rounded-full bg-muted cursor-pointer">
+          <DoorOpen className="w-5 h-5 text-muted-foreground" />
+        </button>
       </div>
 
       {/* Profile section */}
