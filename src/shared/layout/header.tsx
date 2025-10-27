@@ -7,7 +7,7 @@ import { useNotifications } from "@/config/queries/notifications/notification.qu
 const Header = () => {
     const { data: profile, isLoading } = useUserProfile()
     const { data: notifications } = useNotifications()
-    
+
     const unreadCount = notifications?.unread_count || 0
     const userName = profile?.data?.full_name || ''
     const userAvatar = profile?.data?.avatar || ''
@@ -21,12 +21,13 @@ const Header = () => {
                     <AvatarFallback>{isLoading ? '...' : initials || 'U'}</AvatarFallback>
                 </Avatar>
             </Link>
-            
-            <div className="flex items-center justify-center gap-2">
-                <div className="bg-black text-white px-3 py-1 rounded text-sm font-bold">MBOS</div>
-                <span className="text-gray-900 font-medium">Online</span>
-            </div>
-      
+            <Link to="/">
+                <div className="flex items-center justify-center gap-2">
+                    <div className="bg-black text-white px-3 py-1 rounded text-sm font-bold">MBOS</div>
+                    <span className="text-gray-900 font-medium">Online</span>
+                </div>
+            </Link>
+
             <button className="relative">
                 <Bell className="h-6 w-6 text-foreground" />
                 {unreadCount > 0 && (
