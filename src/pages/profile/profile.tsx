@@ -11,6 +11,7 @@ import { useUserProfile } from "@/config/queries/users/profile.queries"
 import { useWallet } from "@/config/queries/wallet/wallet.queries"
 import { useLogout } from "@/config/queries/auth/auth.queries"
 import { useNavigate } from "react-router-dom"
+const baseURL = import.meta.env.VITE_API_URL_UPLOAD
 
 export default function Profile() {
   const { data: profile, isLoading: profileLoading } = useUserProfile()
@@ -53,7 +54,7 @@ export default function Profile() {
       {/* Profile section */}
       <div className="flex flex-col items-center text-center space-y-2">
         <img
-          src={userData?.avatar || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"}
+          src={userData?.avatar ? `${baseURL}/${userData?.avatar}` : "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"}
           alt="Profile"
           className="w-20 h-20 rounded-full object-cover"
         />

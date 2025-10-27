@@ -74,8 +74,8 @@ export const useUpdateProfile = () => {
 
     return useMutation({
         mutationFn: async (request: UpdateProfileRequest): Promise<ApiResponse<UpdateProfileResponse>> => {
-            const { data } = await axiosPrivate.patch<ApiResponse<UpdateProfileResponse>>(
-                userEndpoints.profile,
+            const { data } = await axiosPrivate.put<ApiResponse<UpdateProfileResponse>>(
+                userEndpoints.updateProfile,
                 request
             )
             return data
