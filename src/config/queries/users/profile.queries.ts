@@ -1,7 +1,7 @@
-import { axiosPrivate } from '../../api/api'
-import { userEndpoints } from '../../api/endpoint'
+import { axiosPrivate } from '@/config/api/api'
+import { userEndpoints } from '@/config/api/endpoint'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
-import { showSuccess, showError } from '../../../shared/utils/notifications'
+import { showSuccess, showError } from '@/shared/utils/notifications'
 
 export interface ApiResponse<T> {
     success: boolean
@@ -48,7 +48,7 @@ export const useUpdateProfile = () => {
 
     return useMutation({
         mutationFn: async (request: UpdateProfileRequest): Promise<ApiResponse<UpdateProfileResponse>> => {
-            const { data } = await axiosPrivate.patch<ApiResponse<UpdateProfileResponse>>(
+            const { data } = await axiosPrivate.put<ApiResponse<UpdateProfileResponse>>(
                 userEndpoints.profile,
                 request
             )

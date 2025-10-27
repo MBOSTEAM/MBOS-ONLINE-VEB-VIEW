@@ -2,11 +2,16 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useVerifyOtp, useSendOtp } from '@/config/queries/auth/auth.queries'
 
 const VerifyPhone = () => {
 	const navigate = useNavigate()
 	const location = useLocation()
 	const phoneNumber = location.state?.phoneNumber || ''
+	const [verificationToken, setVerificationToken] = useState('')
+
+	const { mutate: verifyOtp, isPending } = useVerifyOtp()
+	const { mutate: sendOtp, isPending: isResending } = useSendOtp()
 
 	const [otp, setOtp] = useState(['', '', '', '', '', ''])
 	const [timeLeft, setTimeLeft] = useState(58)
@@ -45,18 +50,39 @@ const VerifyPhone = () => {
 	const handleSubmit = () => {
 		const otpCode = otp.join('')
 		if (otpCode.length === 6) {
-			// Handle OTP verification logic here
-			console.log('OTP submitted:', otpCode)
-			// Navigate to setup profile
-			navigate('/setup-profile')
+			verifyOtp({
+				phone: phoneNumber,
+				verification_token: location.state?.verification_token || verificationToken,
+				otp: otpCode
+			}, {
+				onSuccess: (response) => {
+					console.log('OTP verified successfully:', response)
+					if (response.data.user.is_new_user) {
+						navigate('/setup-profile')
+					} else {
+						navigate('/')
+					}
+				},
+				onError: (error) => {
+					console.error('Error verifying OTP:', error)
+				}
+			})
 		}
 	}
 
 	const handleResend = () => {
 		setTimeLeft(58)
 		setCanResend(false)
-		// Handle resend logic here
-		console.log('Resending OTP to:', phoneNumber)
+		setOtp(['', '', '', '', '', ''])
+		
+		sendOtp(phoneNumber, {
+			onSuccess: (response) => {
+				setVerificationToken(response.data.verification_token)
+			},
+			onError: (error) => {
+				console.error('Error resending OTP:', error)
+			}
+		})
 	}
 
 	const formatTime = (seconds: number) => {
@@ -100,20 +126,25 @@ const VerifyPhone = () => {
 
 					<Button
 						onClick={handleSubmit}
-						disabled={otp.some(digit => !digit)}
+						disabled={otp.some(digit => !digit) || isPending}
 						className='w-full bg-black text-white hover:bg-gray-900'
 					>
-						Verify
+						{isPending ? 'Tekshirilmoqda...' : 'Tasdiqlash'}
 					</Button>
 
 					<div className='text-center'>
 						{canResend ? (
-							<Button variant='link' onClick={handleResend} className='text-sm'>
-								Resend code
+							<Button 
+								variant='link' 
+								onClick={handleResend} 
+								disabled={isResending}
+								className='text-sm'
+							>
+								{isResending ? 'Yuborilmoqda...' : 'Qayta yuborish'}
 							</Button>
 						) : (
 							<p className='text-sm text-gray-500'>
-								Resend code after {formatTime(timeLeft)}
+								Qayta yuborish uchun: {formatTime(timeLeft)} kuting
 							</p>
 						)}
 					</div>

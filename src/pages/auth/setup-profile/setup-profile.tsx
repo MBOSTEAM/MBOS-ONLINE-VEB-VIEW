@@ -1,17 +1,22 @@
-"use client"
-
 import type React from "react"
-
 import { useState, useRef } from "react"
+import { useNavigate } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Camera } from "lucide-react"
+import { useUpdateProfile } from '@/config/queries/users/profile.queries'
+import { useUploadImage } from '@/config/queries/upload/upload.queries'
 
 export default function SetupProfilePage() {
+  const navigate = useNavigate()
   const [name, setName] = useState("")
   const [avatar, setAvatar] = useState<string | null>(null)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  const { mutate: updateProfile, isPending: isUpdating } = useUpdateProfile()
+  const { mutate: uploadImage, isPending: isUploading } = useUploadImage()
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click()
@@ -20,6 +25,7 @@ export default function SetupProfilePage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      setAvatarFile(file)
       const reader = new FileReader()
       reader.onload = (event) => {
         setAvatar(event.target?.result as string)
@@ -29,8 +35,39 @@ export default function SetupProfilePage() {
   }
 
   const handleNext = () => {
-    if (name.trim()) {
-      console.log("Profile name:", name)
+    if (!name.trim()) return
+
+    const isPending = isUpdating || isUploading
+    if (isPending) return
+
+    // If there's an avatar to upload, upload it first
+    if (avatarFile) {
+      uploadImage({ file: avatarFile, type: 'avatar' }, {
+        onSuccess: (uploadResponse) => {
+          // Then update profile with uploaded avatar URL
+          updateProfile({
+            full_name: name,
+            avatar: uploadResponse.data.url
+          }, {
+            onSuccess: () => {
+              navigate('/')
+            }
+          })
+        },
+        onError: (error) => {
+          console.error('Error uploading avatar:', error)
+        }
+      })
+    } else {
+      // No avatar, just update name
+      updateProfile({ full_name: name }, {
+        onSuccess: () => {
+          navigate('/')
+        },
+        onError: (error) => {
+          console.error('Error updating profile:', error)
+        }
+      })
     }
   }
 
@@ -81,14 +118,15 @@ export default function SetupProfilePage() {
             {/* Next button */}
             <Button
               onClick={handleNext}
-              className="w-full bg-black text-white hover:bg-gray-900 rounded-lg py-3 font-semibold text-base"
+              disabled={!name.trim() || isUpdating || isUploading}
+              className="w-full bg-black text-white hover:bg-gray-900 rounded-lg py-3 font-semibold text-base disabled:opacity-50"
             >
-              Next
+              {isUpdating || isUploading ? 'Saqlandi...' : 'Keyingi'}
             </Button>
+          </div>
           </div>
         </div>
       </div>
-    </div>
     </div>
   )
 }

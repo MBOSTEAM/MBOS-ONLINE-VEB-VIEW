@@ -1,7 +1,7 @@
-import { axiosPrivate } from '../../api/api'
-import { authEndpoints } from '../../api/endpoint'
+import { axiosPrivate } from '@/config/api/api'
+import { authEndpoints } from '@/config/api/endpoint'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { showSuccess, showError } from '../../../shared/utils/notifications'
+import { showSuccess, showError } from '@/shared/utils/notifications'
 
 export interface SendOtpRequest {
     phone: string
