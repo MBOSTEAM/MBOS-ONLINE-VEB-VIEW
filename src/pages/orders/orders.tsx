@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Menu } from "lucide-react"
 import Tabs, { TabsTrigger } from "@/components/ui/tabs"
 import { useState, useMemo } from "react"
+import { Link } from "react-router-dom"
 
 type Order = {
   id: string
@@ -91,6 +92,11 @@ export default function OrdersPage() {
   return (
     <div className="px-4 pt-6 max-w-xl mx-auto">
       <header className="flex items-center justify-between mb-4">
+        <Link to="/vehicles" className="p-2 rounded-full bg-muted">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 18l-6-6 6-6" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </Link>
         <h1 className="text-xl font-semibold">Orders</h1>
         <div className="flex gap-2">
           <Button variant="ghost" size="icon-lg" aria-label="filter"><Menu size={30}/></Button>

@@ -37,7 +37,7 @@ export function TabsTrigger({ value, children, className = "" }: { value: string
   const ctx = useContext(TabsContext)
   if (!ctx) return null
   const active = ctx.value === value
-  const base = "px-4 py-2 rounded-full text-sm"
+  const base = "px-4 py-2 rounded-md text-sm"
   const activeCls = "bg-foreground text-background font-medium"
   const inactiveCls = "bg-muted text-muted-foreground"
 
