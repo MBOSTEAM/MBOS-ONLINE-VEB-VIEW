@@ -8,25 +8,33 @@ export interface ApiResponse<T> {
     data: T
 }
 
+export interface PaginatedApiResponse<T> {
+    success: boolean
+    data: T
+    pagination: {
+        page: number
+        limit: number
+        total: number
+        total_pages: number
+    }
+}
 
 export interface VehicleParams {
-    brands: string[]
-    models: string[]
-    colors: string[]
+    brands: Array<string | { id: string; name: string }>
+    models: Array<string | { id: string; name: string }>
+    colors: Array<string | { id: string; name: string }>
 }
 
 export interface UserVehicle {
     id: string
-    user_id: string
-    brand: string
-    model: string
-    color: string
     plate_number: string
-    year: number
-    status: string
-    total_orders: number
-    last_used: string
-    created_at: string
+    color: string
+    model: string
+    brand: string
+    year?: number
+    total_orders?: number
+    last_used?: string
+    created_at?: string
 }
 
 export interface AddVehicleRequest {
@@ -44,7 +52,6 @@ export interface AddVehicleResponse {
     color: string
     plate_number: string
     year: number
-    status: string
     created_at: string
 }
 
@@ -58,12 +65,10 @@ export interface UpdateVehicleRequest {
 
 export interface UpdateVehicleResponse {
     id: string
+    plate_number: string
     brand: string
     model: string
     color: string
-    plate_number: string
-    year: number
-    updated_at: string
 }
 
 export interface DeleteVehicleResponse {
@@ -72,24 +77,24 @@ export interface DeleteVehicleResponse {
 
 export const useVehicleParams = () => {
     return useQuery({
-        queryKey: ['user', 'vehicle-params'],
-        queryFn: async (): Promise<VehicleParams> => {
-            const { data } = await axiosPrivate.get<VehicleParams>(
+        queryKey: [userEndpoints.vehicleParams],
+        queryFn: async (): Promise<ApiResponse<VehicleParams>> => {
+            const response = await axiosPrivate.get<ApiResponse<VehicleParams>>(
                 userEndpoints.vehicleParams
             )
-            return data
+            return response.data
         }
     })
 }
 
 export const useUserVehicles = () => {
     return useQuery({
-        queryKey: ['user', 'vehicles'],
-        queryFn: async (): Promise<ApiResponse<UserVehicle[]>> => {
-            const { data } = await axiosPrivate.get<ApiResponse<UserVehicle[]>>(
+        queryKey: [userEndpoints.vehicles],
+        queryFn: async (): Promise<PaginatedApiResponse<UserVehicle[]>> => {
+            const response = await axiosPrivate.get<PaginatedApiResponse<UserVehicle[]>>(
                 userEndpoints.vehicles
             )
-            return data
+            return response.data
         }
     })
 }
@@ -99,14 +104,14 @@ export const useAddVehicle = () => {
 
     return useMutation({
         mutationFn: async (request: AddVehicleRequest): Promise<ApiResponse<AddVehicleResponse>> => {
-            const { data } = await axiosPrivate.post<ApiResponse<AddVehicleResponse>>(
+            const response = await axiosPrivate.post<ApiResponse<AddVehicleResponse>>(
                 userEndpoints.vehicles,
                 request
             )
-            return data
+            return response.data
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['user', 'vehicles'] })
+            queryClient.invalidateQueries({ queryKey: [userEndpoints.vehicles] })
             showSuccess('Transport vositasi muvaffaqiyatli qo\'shildi')
         },
         onError: () => {
@@ -120,14 +125,14 @@ export const useUpdateVehicle = () => {
 
     return useMutation({
         mutationFn: async ({ id, ...request }: { id: string } & UpdateVehicleRequest): Promise<ApiResponse<UpdateVehicleResponse>> => {
-            const { data } = await axiosPrivate.put<ApiResponse<UpdateVehicleResponse>>(
+            const response = await axiosPrivate.patch<ApiResponse<UpdateVehicleResponse>>(
                 userEndpoints.vehicle(id),
                 request
             )
-            return data
+            return response.data
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['user', 'vehicles'] })
+            queryClient.invalidateQueries({ queryKey: [userEndpoints.vehicles] })
             showSuccess('Transport vositasi muvaffaqiyatli yangilandi')
         },
         onError: () => {
@@ -141,13 +146,13 @@ export const useDeleteVehicle = () => {
 
     return useMutation({
         mutationFn: async (id: string): Promise<ApiResponse<DeleteVehicleResponse>> => {
-            const { data } = await axiosPrivate.delete<ApiResponse<DeleteVehicleResponse>>(
+            const response = await axiosPrivate.delete<ApiResponse<DeleteVehicleResponse>>(
                 userEndpoints.vehicle(id)
             )
-            return data
+            return response.data
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['user', 'vehicles'] })
+            queryClient.invalidateQueries({ queryKey: [userEndpoints.vehicles] })
             showSuccess('Transport vositasi muvaffaqiyatli o\'chirildi')
         },
         onError: () => {

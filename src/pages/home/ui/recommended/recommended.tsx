@@ -1,17 +1,13 @@
-"use client"
-import * as React from "react"
 import { Badge } from "@/components/ui/badge"
-import { Star, CheckCircle, MapPin, Clock } from "lucide-react"
+import { Star, MapPin, Clock } from "lucide-react"
 import { useStations, type StationListItem } from "@/config/queries/stations/station.queries"
 import { Link } from "react-router-dom"
-import { Card, CardContent } from "@/components/ui/card"
+import { CardContent } from "@/components/ui/card"
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
   CarouselPrevious,
-  type CarouselApi,
 } from "@/components/ui/carousel"
 const baseURL = import.meta.env.VITE_API_URL_UPLOAD
 
@@ -28,18 +24,6 @@ const extractTime = (dateTimeString: string): string => {
 
 export default function Recommended() {
   const { data: stationsData, isLoading } = useStations({ limit: 12 })
-  const [api, setApi] = React.useState<CarouselApi>()
-  const [current, setCurrent] = React.useState(0)
-  const [count, setCount] = React.useState(0)
-
-  React.useEffect(() => {
-    if (!api) return
-    setCount(api.scrollSnapList().length)
-    setCurrent(api.selectedScrollSnap() + 1)
-    api.on("select", () => {
-      setCurrent(api.selectedScrollSnap() + 1)
-    })
-  }, [api])
 
   if (isLoading) {
     return (
@@ -64,7 +48,7 @@ export default function Recommended() {
 
   return (
     <div className="mx-auto max-w-xl mt-10">
-      <Carousel setApi={setApi} className="w-full max-w-xl">
+      <Carousel className="w-full max-w-xl">
         <CarouselContent>
           {stations.map((station) => (
             <CarouselItem key={station.id}>
