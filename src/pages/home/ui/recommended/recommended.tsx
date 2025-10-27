@@ -15,6 +15,17 @@ import {
 } from "@/components/ui/carousel"
 const baseURL = import.meta.env.VITE_API_URL_UPLOAD
 
+// Helper function to extract time from datetime string
+const extractTime = (dateTimeString: string): string => {
+  if (!dateTimeString) return ''
+  const parts = dateTimeString.split(' ')
+  if (parts.length >= 2) {
+    const timePart = parts[1] // Get "HH:MM:SS"
+    return timePart.substring(0, 5) // Return only "HH:MM"
+  }
+  return dateTimeString
+}
+
 export default function Recommended() {
   const { data: stationsData, isLoading } = useStations({ limit: 12 })
   const [api, setApi] = React.useState<CarouselApi>()
@@ -71,16 +82,12 @@ export default function Recommended() {
                         {station.is_open ? 'OCHIQ' : 'YOPIQ'}
                       </Badge>
                     </div>
-                    {/* Info section */}
                     <div className="p-4 bg-background">
                       <div className="flex justify-between items-start">
                         <div className="flex items-start gap-1 flex-1">
                           <h3 className="font-semibold text-lg text-foreground line-clamp-1">
                             {station.title || 'Station'}
                           </h3>
-                          {station.rating && station.rating >= 4.5 && (
-                            <CheckCircle className="w-4 h-4 text-blue-500 shrink-0 mt-1" />
-                          )}
                         </div>
                         <span className="font-semibold text-foreground ml-2">
                           {station.current_queue && station.current_queue > 0 && `${station.current_queue} navbat`}
@@ -101,16 +108,11 @@ export default function Recommended() {
                           <span className="text-sm font-medium text-foreground">
                             {station.rating ? station.rating.toFixed(1) : '0.0'}
                           </span>
-                          <span className="text-xs text-muted-foreground">
-                            ({station.reviews_count || 0})
-                          </span>
                         </div>
-                        {station.estimated_wait && station.estimated_wait > 0 && (
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Clock className="w-3 h-3" />
-                            <span>{station.estimated_wait} min</span>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="w-3 h-3" />
+                          <span>{extractTime(station.work_time_today?.from || '')} - {extractTime(station.work_time_today?.to || '')} </span>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -121,7 +123,7 @@ export default function Recommended() {
         </CarouselContent>
         <CarouselPrevious />
       </Carousel>
-  
+
     </div>
   )
 }
