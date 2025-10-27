@@ -1,9 +1,13 @@
 import { Bell } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { useNavigate } from "react-router-dom"
+
 const Header = () => {
+    const navigate = useNavigate()
+
     return (
         <div className="flex items-center justify-between">
-                <Avatar className="h-10 w-10">
+                <Avatar className="h-10 w-10 cursor-pointer" onClick={() => navigate('/profile')}>
                     <AvatarImage src="/user-avatar.jpg" alt="User" />
                     <AvatarFallback>U</AvatarFallback>
                 </Avatar>
