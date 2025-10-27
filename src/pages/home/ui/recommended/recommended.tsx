@@ -3,7 +3,7 @@ import { Star, CheckCircle } from "lucide-react"
 
 export default function Recommended() {
   return (
-    <div className="max-w-xs rounded-2xl overflow-hidden bg-muted shadow-sm border border-border mt-10 ">
+      <div className="max-w-xs rounded-2xl overflow-hidden bg-muted shadow-sm border border-border mt-10 ">
       {/* Image section */}
       <div className="relative">
         <img

@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card"
 
 export default function BookingCard() {
   return (
-    <Card className="overflow-hidden border-0 shadow-sm bg-muted py-3 mt-10">
+    <Card className="overflow-hidden border-0 shadow-sm bg-muted py-1 mt-4">
       <div className="flex items-stretch">
         <div className="flex-1 p-3">
           <Badge className="bg-green-500 hover:bg-green-600 text-white mb-3 inline-block">CONFIRMED</Badge>
