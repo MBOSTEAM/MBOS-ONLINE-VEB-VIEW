@@ -28,12 +28,12 @@ export default function Recommended() {
           <span className="font-semibold text-foreground">8–24 $</span>
         </div>
 
-        <div className="flex justify-between text-sm text-muted-foreground mt-1">
+        <div className="flex justify-between text-base text-muted-foreground mt-1">
           <span>New York · 300 m</span>
           <span>10:30 – 20:30</span>
         </div>
 
-        <div className="flex items-center gap-1 mt-2 mb-10">
+        <div className="flex items-center gap-1 mt-2 mb-2">
           <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
           <span className="text-sm font-medium text-foreground">4.5</span>
         </div>

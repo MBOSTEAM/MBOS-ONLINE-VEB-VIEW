@@ -8,14 +8,14 @@ import Recommended from "./ui/recommended/recommended"
 const Home = () => {
 
 	return (
-		<main className='h-full flex flex-col overflow-auto'>
+		<main className='flex flex-col'>
 			<Header />
 			<BookingCard/>
 			<SearchBar/>
 			<Banner/>
 			<ServiceCategories/>
 			<Recommended />
-			
+
 		</main>
 	)
 }
