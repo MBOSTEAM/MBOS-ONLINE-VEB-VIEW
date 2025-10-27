@@ -1,6 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom'
-import Navbar from './navbar'
-import { Drawer } from '@/components/ui/drawer'
+
 
 export const Layout = () => {
 	const { pathname } = useLocation()
@@ -16,24 +15,9 @@ export const Layout = () => {
 						<Outlet />
 						{/* <Toaster position='top-center' /> */}
 					</div>
-					{!hideNavbarRoutes.includes(pathname) && <Navbar />}
 				</div>
 			
-				<Drawer
-					// open={open && !!selectedStation}
-					// onClose={onClose}
-                    >
-					{/* <StationDrawer
-						station={{
-							title: selectedStation?.name ?? '',
-							chargerLocation: selectedStation?.address ?? '',
-							time: 'Available',
-							...selectedStation,
-							power: `${selectedStation?.power.toString()}`,
-							connectors: selectedStation?.connector.length ?? 0
-						}}
-					/> */}
-				</Drawer>
+
 			</div>
 			<div className='bg-black flex-auto ' />
 		</div>
