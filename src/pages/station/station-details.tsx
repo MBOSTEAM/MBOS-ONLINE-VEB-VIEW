@@ -22,7 +22,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useStationDetails, useStationTimeSlots } from "@/config/queries/stations/station.queries";
-import { useCreateOrder } from "@/config/queries/orders/order.queries";
+import { useCreateOrder, useOrders } from "@/config/queries/orders/order.queries";
 import { useUserVehicles as useVehicles } from "@/config/queries/vehicles/vehicles.queries";
 import { useServiceFeedback, useSubmitServiceFeedback } from "@/config/queries/feedback/feedback.queries";
 
@@ -49,13 +49,15 @@ const StationDetails: React.FC = () => {
   const { mutate: createOrder, isPending: isCreatingOrder } = useCreateOrder();
   const { data: feedbacksData, isLoading: isLoadingFeedbacks } = useServiceFeedback(stationData?.data.service_id!, { page: 1, limit: 10 });
   const { mutate: submitFeedback, isPending: isSubmittingFeedback } = useSubmitServiceFeedback();
+  const { data: ordersData } = useOrders({ status: 'completed', limit: 50 });
 
   const { data: timeSlotsData } = useStationTimeSlots(id!, {
     date: selectedDate,
     fuel_type_id: selectedFuelType
   });
 
-
+  // Filter orders for this specific station
+  const stationOrders = ordersData?.data?.filter(order => order.station.id === id) || [];
 
   const handleBack = () => {
     navigate("/");
@@ -519,6 +521,7 @@ const StationDetails: React.FC = () => {
               variant="outline"
               size="sm"
               onClick={() => setShowFeedbackForm(true)}
+              disabled={stationOrders.length === 0}
             >
               Fikr qoldirish
             </Button>
@@ -858,9 +861,23 @@ const StationDetails: React.FC = () => {
                   className="w-full p-2 border rounded-md"
                 >
                   <option value="">Buyurtma tanlang</option>
-                  {/* This would need to be populated with user's completed orders for this station */}
-                  <option value="sample-order-id">Buyurtma #12345</option>
+                  {stationOrders.length > 0 ? (
+                    stationOrders.map((order) => (
+                      <option key={order.id} value={order.id}>
+                        {order.order_number} - {new Date(order.scheduled_datetime).toLocaleDateString('uz-UZ')} - {order.fuel_type}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>
+                      Bu stansiya uchun tugallangan buyurtmalar yo'q
+                    </option>
+                  )}
                 </select>
+                {stationOrders.length === 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Fikr qoldirish uchun avval bu stansiyada buyurtma tugatishingiz kerak
+                  </p>
+                )}
               </div>
 
               {/* Rating */}
