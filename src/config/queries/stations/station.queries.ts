@@ -47,10 +47,12 @@ export interface WorkTimeToday {
 }
 
 export interface WorkTime {
-    day: number
-    from: string
-    to: string
-    is_closed: boolean
+    id: string
+    day_of_week: number
+    from_time: string
+    to_time: string
+    is_weekend: boolean
+    status: string
 }
 
 export interface RevenueDistribution {

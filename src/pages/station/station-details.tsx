@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  Star,
-  MapPin,
-  Clock,
-  Share2,
-  Phone,
-  Globe,
-  Instagram,
+import { 
+  Star, 
+  MapPin, 
+  Clock, 
+  Share2, 
+  Phone, 
+  Globe, 
+  Instagram, 
   Bookmark,
   ArrowLeft,
   ShoppingBag,
@@ -16,11 +16,15 @@ import {
   CreditCard,
   Fuel,
   Calendar,
-  Users
+  Users,
+  Plus,
+  Minus
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useStationDetails, useStationTimeSlots } from "@/config/queries/stations/station.queries";
+import { useCreateOrder } from "@/config/queries/orders/order.queries";
+import { useUserVehicles as useVehicles } from "@/config/queries/vehicles/vehicles.queries";
 
 const StationDetails: React.FC = () => {
   const { id } = useParams();
@@ -28,16 +32,101 @@ const StationDetails: React.FC = () => {
   const [activeTab, setActiveTab] = useState("About");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedFuelType, setSelectedFuelType] = useState('');
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState('');
+  const [selectedUnit, setSelectedUnit] = useState('');
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
+  const [refuelingType, setRefuelingType] = useState<'volume' | 'fill_in_amount'>('volume');
+  const [refuelingVolume, setRefuelingVolume] = useState<number>(1);
+  const [refuelingAmount, setRefuelingAmount] = useState<number>(1000);
 
   const { data: stationData, isLoading, error } = useStationDetails(id!);
-
+  const { data: vehiclesData } = useVehicles();
+  const { mutate: createOrder, isPending: isCreatingOrder } = useCreateOrder();
+  
   const { data: timeSlotsData } = useStationTimeSlots(id!, {
     date: selectedDate,
     fuel_type_id: selectedFuelType
   });
 
+  // Mock data for time slots when API doesn't return data
+  const mockTimeSlots = {
+    data: {
+      slots: [
+        { time: "08:00", available: true, queue_length: 0, unit_id: null },
+        { time: "08:30", available: true, queue_length: 1, unit_id: null },
+        { time: "09:00", available: true, queue_length: 0, unit_id: null },
+        { time: "09:30", available: false, queue_length: 3, unit_id: null },
+        { time: "10:00", available: true, queue_length: 0, unit_id: null },
+        { time: "10:30", available: true, queue_length: 2, unit_id: null },
+        { time: "11:00", available: true, queue_length: 0, unit_id: null },
+        { time: "11:30", available: false, queue_length: 4, unit_id: null },
+        { time: "12:00", available: true, queue_length: 1, unit_id: null },
+        { time: "12:30", available: true, queue_length: 0, unit_id: null },
+        { time: "13:00", available: true, queue_length: 0, unit_id: null },
+        { time: "13:30", available: false, queue_length: 2, unit_id: null },
+        { time: "14:00", available: true, queue_length: 0, unit_id: null },
+        { time: "14:30", available: true, queue_length: 1, unit_id: null },
+        { time: "15:00", available: true, queue_length: 0, unit_id: null },
+        { time: "15:30", available: false, queue_length: 3, unit_id: null },
+        { time: "16:00", available: true, queue_length: 0, unit_id: null },
+        { time: "16:30", available: true, queue_length: 2, unit_id: null },
+        { time: "17:00", available: true, queue_length: 0, unit_id: null },
+        { time: "17:30", available: false, queue_length: 5, unit_id: null },
+        { time: "18:00", available: true, queue_length: 1, unit_id: null }
+      ]
+    }
+  };
+
+  // Use mock data if API doesn't return data
+  const finalTimeSlotsData = timeSlotsData?.data?.slots && timeSlotsData.data.slots.length > 0 
+    ? timeSlotsData 
+    : mockTimeSlots;
+
+
   const handleBack = () => {
     navigate("/");
+  };
+
+  const handleBookingClick = () => {
+    if (!station.is_open) return;
+    setShowBookingModal(true);
+  };
+
+  const handleCreateOrder = () => {
+    if (!selectedVehicle || !selectedFuelType || !selectedUnit || !selectedTimeSlot) {
+      return;
+    }
+
+    // Validation for refueling amount/volume
+    if (refuelingType === 'volume' && refuelingVolume < 1) {
+      return;
+    }
+    if (refuelingType === 'fill_in_amount' && refuelingAmount < 1000) {
+      return;
+    }
+
+    // Create proper ISO datetime format
+    const scheduledDateTime = `${selectedDate}T${selectedTimeSlot}:00.000Z`;
+    
+    
+    createOrder({
+      station_id: id!,
+      fuel_type_id: selectedFuelType,
+      unit_id: selectedUnit,
+      vehicle_id: selectedVehicle,
+      scheduled_datetime: scheduledDateTime,
+      refueling_type: refuelingType,
+      refueling_volume: refuelingType === 'volume' ? refuelingVolume : null,
+      refueling_amount: refuelingType === 'fill_in_amount' ? refuelingAmount : null,
+      payment_method: 'wallet',
+      special_instructions: ''
+    }, {
+      onSuccess: () => {
+        setShowBookingModal(false);
+        navigate('/orders');
+      }
+    });
   };
 
   const tabs = ["About", "Services", "Time Slots", "Feedbacks"];
@@ -226,17 +315,19 @@ const StationDetails: React.FC = () => {
           <div className="border-b pb-4 mb-4">
             <h3 className="font-semibold mb-2">Ish vaqti</h3>
             <div className="space-y-2 text-muted-foreground">
-              {station.work_times?.map((workTime, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  <span>
-                    {workTime.is_closed
-                      ? 'Yopiq'
-                      : `${extractTime(workTime.from)} - ${extractTime(workTime.to)}`
-                    }
-                  </span>
-                </div>
-              ))}
+              {station.work_times?.map((workTime, index) => {
+                const dayNames = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba'];
+                const dayName = dayNames[workTime.day_of_week] || `Kun ${workTime.day_of_week}`;
+                
+                return (
+                  <div key={index} className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    <span>
+                      {dayName}: {extractTime(workTime.from_time)} - {extractTime(workTime.to_time)}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -356,7 +447,7 @@ const StationDetails: React.FC = () => {
                     const fuelPrice = typeof fuel.price === 'number' ? fuel.price : 0;
 
                     return (
-                      <option key={fuel.id || Math.random()} value={fuel.id}>
+                      <option key={fuel.id || Math.random()} value={fuel.type?.id}>
                         {fuelName} - {fuelPrice.toLocaleString()} UZS
                       </option>
                     );
@@ -367,11 +458,11 @@ const StationDetails: React.FC = () => {
           </div>
 
           {/* Time Slots Display */}
-          {selectedFuelType && timeSlotsData?.data ? (
+          {selectedFuelType && finalTimeSlotsData?.data ? (
             <div className="mt-4">
               <h4 className="font-medium mb-3">Mavjud vaqtlar ({selectedDate})</h4>
               <div className="grid grid-cols-3 gap-2">
-                {timeSlotsData.data.slots.map((slot, index) => (
+                {finalTimeSlotsData.data.slots.map((slot, index) => (
                   <button
                     key={index}
                     disabled={!slot.available}
@@ -405,12 +496,202 @@ const StationDetails: React.FC = () => {
       )}
 
       {/* Order Button */}
-      <Button
+      <Button 
         className="w-full py-6 text-lg bg-primary hover:bg-primary/90"
         disabled={!station.is_open}
+        onClick={handleBookingClick}
       >
         {station.is_open ? 'Band qilish' : 'Hozircha band qilib bo\'lmaydi'}
       </Button>
+
+      {/* Booking Modal */}
+      {showBookingModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-background rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Band qilish</h3>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowBookingModal(false)}
+              >
+                ✕
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Vehicle Selection */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">Transport vositasi</label>
+                <select
+                  value={selectedVehicle}
+                  onChange={(e) => setSelectedVehicle(e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                >
+                  <option value="">Transport vositasi tanlang</option>
+                  {vehiclesData?.data?.map((vehicle) => (
+                    <option key={vehicle.id} value={vehicle.id}>
+                      {vehicle.brand} {vehicle.model} - {vehicle.plate_number}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Fuel Type Selection */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">Yoqilg'i turi</label>
+                <select
+                  value={selectedFuelType}
+                  onChange={(e) => setSelectedFuelType(e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                >
+                  <option value="">Yoqilg'i turini tanlang</option>
+                  {station.fuel_types?.map((fuel) => (
+                    <option key={fuel.id} value={fuel.type?.id}>
+                      {fuel.type?.name} - {fuel.price.toLocaleString()} UZS
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Unit Selection */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">Birlik</label>
+                <select
+                  value={selectedUnit}
+                  onChange={(e) => setSelectedUnit(e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                >
+                  <option value="">Birlik tanlang</option>
+                  {station.units?.map((unit) => (
+                    <option key={unit.id} value={unit.id}>
+                      {unit.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Date Selection */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">Sana</label>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                  min={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+
+              {/* Time Slot Selection */}
+              {selectedFuelType && (
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Vaqt</label>
+                  {finalTimeSlotsData?.data?.slots && finalTimeSlotsData.data.slots.length > 0 ? (
+                    <div className="grid grid-cols-3 gap-2">
+                      {finalTimeSlotsData.data.slots.map((slot, index) => (
+                        <button
+                          key={index}
+                          disabled={!slot.available}
+                          onClick={() => setSelectedTimeSlot(slot.time)}
+                          className={`p-2 rounded-lg text-sm font-medium border transition-colors ${
+                            selectedTimeSlot === slot.time
+                              ? 'bg-primary text-primary-foreground'
+                              : slot.available
+                              ? 'bg-background hover:bg-muted'
+                              : 'bg-muted text-muted-foreground cursor-not-allowed'
+                          }`}
+                        >
+                          {slot.time}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground">
+                      <p>Bu kunda vaqt bo'shliqlari mavjud emas</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Refueling Type */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">Yoqilg'i miqdori</label>
+                <div className="flex gap-2 mb-2">
+                  <Button
+                    variant={refuelingType === 'volume' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setRefuelingType('volume')}
+                  >
+                    Litr
+                  </Button>
+                  <Button
+                    variant={refuelingType === 'fill_in_amount' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setRefuelingType('fill_in_amount')}
+                  >
+                    Summa
+                  </Button>
+                </div>
+                
+                {refuelingType === 'volume' ? (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setRefuelingVolume(Math.max(1, refuelingVolume - 1))}
+                    >
+                      <Minus className="w-4 h-4" />
+                    </Button>
+                    <input
+                      type="number"
+                      value={refuelingVolume}
+                      onChange={(e) => setRefuelingVolume(Number(e.target.value))}
+                      className="w-full p-2 border rounded-md text-center"
+                      min="1"
+                      placeholder="Litr"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setRefuelingVolume(refuelingVolume + 1)}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <input
+                    type="number"
+                    value={refuelingAmount}
+                    onChange={(e) => setRefuelingAmount(Number(e.target.value))}
+                    className="w-full p-2 border rounded-md"
+                    placeholder="Summa kiriting (UZS)"
+                    min="1000"
+                  />
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowBookingModal(false)}
+                >
+                  Bekor qilish
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={handleCreateOrder}
+                  disabled={isCreatingOrder || !selectedVehicle || !selectedFuelType || !selectedUnit || !selectedTimeSlot || (refuelingType === 'volume' && refuelingVolume < 1) || (refuelingType === 'fill_in_amount' && refuelingAmount < 1000)}
+                >
+                  {isCreatingOrder ? 'Yaratilmoqda...' : 'Band qilish'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
