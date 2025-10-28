@@ -19,10 +19,10 @@ const VehicleRow: React.FC<{
       <div className="flex items-center gap-4">
         <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-gray-400">
           <svg width="18" height="12" viewBox="0 0 24 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M2 12h20" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M4 8L6 5H18L20 8" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M2 12h20" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M4 8L6 5H18L20 8" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          
+
         </div>
         <div>
           <div className="text-lg font-semibold text-foreground">{brand} {model}</div>
@@ -31,11 +31,10 @@ const VehicleRow: React.FC<{
 
       <div className="flex items-center gap-2">
         <div className="text-right">
-          <div className="font-semibold text-sm">{plate}</div>
-                    <div className="text-sm text-muted-foreground  flex items-center justify-end">{color}</div>
-
+          <div className="font-semibold text-base uppercase">{plate}</div>
+          <div className="text-sm text-muted-foreground  flex items-center justify-end">{color}</div>
         </div>
-        
+
         {onDelete && (
           <div className="relative">
             <button
@@ -45,7 +44,7 @@ const VehicleRow: React.FC<{
             >
               <MoreVertical className="w-4 h-4 text-gray-600" />
             </button>
-            
+
             {showMenu && (
               <>
                 <div className="absolute right-0 top-10 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
@@ -61,8 +60,8 @@ const VehicleRow: React.FC<{
                     <span>{isDeleting ? 'Deleting...' : 'Delete'}</span>
                   </button>
                 </div>
-                <div 
-                  className="fixed inset-0 z-[-1]" 
+                <div
+                  className="fixed inset-0 z-[-1]"
                   onClick={() => setShowMenu(false)}
                 />
               </>
@@ -78,11 +77,11 @@ export default function Vehicles() {
   const { data: vehiclesData, isLoading } = useUserVehicles()
   const { mutate: deleteVehicle, isPending: isDeleting } = useDeleteVehicle()
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [vehicleToDelete, setVehicleToDelete] = useState<{id: string, brand: string, model: string, plate: string} | null>(null)
+  const [vehicleToDelete, setVehicleToDelete] = useState<{ id: string, brand: string, model: string, plate: string } | null>(null)
 
   const vehicles = vehiclesData?.data || []
 
-  const handleDeleteClick = (vehicle: {id: string, brand: string, model: string, plate_number: string}) => {
+  const handleDeleteClick = (vehicle: { id: string, brand: string, model: string, plate_number: string }) => {
     setVehicleToDelete({
       id: vehicle.id,
       brand: vehicle.brand,
@@ -106,7 +105,7 @@ export default function Vehicles() {
         <div className="flex items-center gap-4">
           <Link to="/profile" className="p-2 rounded-full bg-muted">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M15 18l-6-6 6-6" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M15 18l-6-6 6-6" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </Link>
           <h1 className="text-lg font-semibold">Vehicles</h1>
@@ -123,7 +122,7 @@ export default function Vehicles() {
       <div className="flex items-center gap-4">
         <Link to="/profile" className="p-2 rounded-full bg-muted">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M15 18l-6-6 6-6" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M15 18l-6-6 6-6" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </Link>
         <h1 className="text-lg font-semibold">Vehicles</h1>
