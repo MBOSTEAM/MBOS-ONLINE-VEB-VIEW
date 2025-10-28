@@ -10,14 +10,13 @@ import {
 import { useUserProfile } from "@/config/queries/users/profile.queries"
 import { useWallet } from "@/config/queries/wallet/wallet.queries"
 import { useLogout } from "@/config/queries/auth/auth.queries"
-import { Link, useNavigate } from "react-router-dom"
+import { Link } from "react-router-dom"
 const baseURL = import.meta.env.VITE_API_URL_UPLOAD
 
 export default function Profile() {
   const { data: profile, isLoading: profileLoading } = useUserProfile()
   const { data: wallet, isLoading: walletLoading } = useWallet()
   const { mutate: logout } = useLogout()
-  const navigate = useNavigate()
 
   if (profileLoading || walletLoading) {
     return (
@@ -33,7 +32,6 @@ export default function Profile() {
 
   const handleLogout = () => {
     logout(refreshToken)
-    navigate('/login')
   }
 
   return (

@@ -2,6 +2,7 @@ import { axiosPrivate } from '@/config/api/api'
 import { authEndpoints } from '@/config/api/endpoint'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { showSuccess, showError } from '@/shared/utils/notifications'
+import { useNavigate } from 'react-router-dom'
 
 export interface SendOtpRequest {
     phone: string
@@ -128,7 +129,7 @@ export const useRefreshToken = () => {
 
 export const useLogout = () => {
     const queryClient = useQueryClient()
-
+    const navigate = useNavigate()
     return useMutation({
         mutationFn: async (refreshToken: string): Promise<void> => {
             await axiosPrivate.post(authEndpoints.logout, { refresh_token: refreshToken })
@@ -137,6 +138,7 @@ export const useLogout = () => {
             localStorage.removeItem('accessToken')
             localStorage.removeItem('refreshToken')
             queryClient.clear()
+            navigate('/login')
             showSuccess('Tizimdan muvaffaqiyatli chiqdingiz')
         },
         onError: () => {
