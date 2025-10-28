@@ -25,19 +25,20 @@ export interface PreviewPhoto {
 
 export interface FuelType {
     id: string
-    type: string
-    name: string
+    type: {
+        id: string
+        code: string
+        name: string
+        volume_unit: string
+        description: string
+    }
     price: number
     available: boolean
     booking_fee: number
 }
 
 export interface FuelTypeWithUnits extends FuelType {
-    units: {
-        id: string
-        name: string
-        available: boolean
-    }[]
+    // Units are now separate at station level, not per fuel type
 }
 
 export interface WorkTimeToday {
@@ -102,7 +103,20 @@ export interface StationDetails extends Omit<StationListItem, 'fuel_types' | 'wo
     is_open: boolean | null
     current_queue: number | null
     work_times: WorkTime[]
+    work_time_today?: {
+        id: string
+        from: string
+        to: string
+        day_of_week: number
+        is_weekend: boolean
+    }
     fuel_types: FuelTypeWithUnits[]
+    units: {
+        id: string
+        name: string
+        available: boolean
+        description?: string | null
+    }[]
 }
 
 export interface TimeSlot {
