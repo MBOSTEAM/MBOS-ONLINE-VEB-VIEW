@@ -13,9 +13,16 @@ export default function AddVehicle() {
   const [brandId, setBrandId] = useState('')
   const [brandName, setBrandName] = useState('')
   const [model, setModel] = useState('')
+  const [modelName, setModelName] = useState('')
   const [color, setColor] = useState('')
+  const [colorName, setColorName] = useState('')
   const [plateNumber, setPlateNumber] = useState('')
   const [year, setYear] = useState('')
+
+  // Search filters
+  const [brandSearch, setBrandSearch] = useState('')
+  const [modelSearch, setModelSearch] = useState('')
+  const [colorSearch, setColorSearch] = useState('')
 
   // Brands infinite query
   const { data: brandsData, fetchNextPage: fetchNextBrands, hasNextPage: hasNextBrands, isFetchingNextPage: isLoadingBrands } = useBrandsInfinite(20)
@@ -70,11 +77,39 @@ export default function AddVehicle() {
   })
 
 
+  // Filter functions
+  const filteredBrands = brandsOptions.filter(brand => 
+    brand.label.toLowerCase().includes(brandSearch.toLowerCase())
+  )
+
+  const filteredModels = modelsOptions.filter(model => 
+    model.label.toLowerCase().includes(modelSearch.toLowerCase())
+  )
+
+  const filteredColors = colors.filter(color => 
+    color.label.toLowerCase().includes(colorSearch.toLowerCase())
+  )
+
   const handleBrandChange = (value: string) => {
     const selected = brandsOptions.find(b => b.value === value)
     setBrandId(value)
     setBrandName(selected?.label ?? selected?.value ?? value)
     setModel('') // Reset model when brand changes
+    setModelName('')
+  }
+
+  const handleModelChange = (value: string) => {
+    const selected = modelsOptions.find(m => m.value === value)
+    setModel(value)
+    setModelName(selected?.label ?? selected?.value ?? value)
+    setColor('')
+    setColorName('')
+  }
+
+  const handleColorChange = (value: string) => {
+    const selected = colors.find(c => c.value === value)
+    setColor(value)
+    setColorName(selected?.label ?? selected?.value ?? value)
   }
 
   const handleLoadMoreBrands = () => {
@@ -163,13 +198,53 @@ export default function AddVehicle() {
         <h1 className="text-lg font-semibold">Add vehicle</h1>
       </div>
 
+      {/* Selected Values Summary */}
+      <div className="space-y-2 mb-6">
+        {brandName && (
+          <div className="p-3 rounded-lg bg-primary/5 flex items-center justify-between">
+            <span className="text-sm font-medium">Brand: {brandName}</span>
+            <Button variant="ghost" size="sm" onClick={() => setBrandId('')} className="h-8 w-8 p-0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </Button>
+          </div>
+        )}
+        {modelName && (
+          <div className="p-3 rounded-lg bg-primary/5 flex items-center justify-between">
+            <span className="text-sm font-medium">Model: {modelName}</span>
+            <Button variant="ghost" size="sm" onClick={() => setModel('')} className="h-8 w-8 p-0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </Button>
+          </div>
+        )}
+        {colorName && (
+          <div className="p-3 rounded-lg bg-primary/5 flex items-center justify-between">
+            <span className="text-sm font-medium">Color: {colorName}</span>
+            <Button variant="ghost" size="sm" onClick={() => setColor('')} className="h-8 w-8 p-0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </Button>
+          </div>
+        )}
+      </div>
+
       <div className="space-y-6">
         {/* Brand Selection */}
         {!brandId && (
           <div className="space-y-4">
             <h2 className="text-lg font-medium">Select Brand</h2>
+            <Input
+              value={brandSearch}
+              onChange={(e) => setBrandSearch(e.target.value)}
+              placeholder="Search brands..."
+              className="mb-4"
+            />
             <div className="grid grid-cols-1 gap-4">
-              {brandsOptions.map((brand) => (
+              {filteredBrands.map((brand) => (
                 <div
                   key={brand.value}
                   onClick={() => handleBrandChange(brand.value)}
@@ -205,11 +280,17 @@ export default function AddVehicle() {
               </Button>
               <h2 className="text-lg font-medium">Select Model for {brandName}</h2>
             </div>
+            <Input
+              value={modelSearch}
+              onChange={(e) => setModelSearch(e.target.value)}
+              placeholder="Search models..."
+              className="mb-4"
+            />
             <div className="grid grid-cols-2 gap-4">
-              {modelsOptions.map((modelOption) => (
+              {filteredModels.map((modelOption) => (
                 <div
                   key={modelOption.value}
-                  onClick={() => setModel(modelOption.value)}
+                  onClick={() => handleModelChange(modelOption.value)}
                   className={`p-4 rounded-lg border cursor-pointer hover:border-primary transition-colors
                     flex items-center justify-center text-center min-h-[100px]
                     ${model === modelOption.value ? 'border-primary bg-primary/5' : 'border-border'}
@@ -242,11 +323,17 @@ export default function AddVehicle() {
               </Button>
               <h2 className="text-lg font-medium">Select Color</h2>
             </div>
+            <Input
+              value={colorSearch}
+              onChange={(e) => setColorSearch(e.target.value)}
+              placeholder="Search colors..."
+              className="mb-4"
+            />
             <div className="grid grid-cols-2 gap-4">
-              {colors.map((c) => (
+              {filteredColors.map((c) => (
                 <div
                   key={c.value}
-                  onClick={() => setColor(c.value)}
+                  onClick={() => handleColorChange(c.value)}
                   className={`p-4 rounded-lg border cursor-pointer hover:border-primary transition-colors
                     flex items-center justify-center text-center min-h-[80px]
                     ${color === c.value ? 'border-primary bg-primary/5' : 'border-border'}

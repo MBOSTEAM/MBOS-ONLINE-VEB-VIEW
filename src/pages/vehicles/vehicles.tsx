@@ -21,17 +21,18 @@ const VehicleRow: React.FC<{
             <path d="M2 12h20" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M4 8L6 5H18L20 8" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
+          
         </div>
         <div>
           <div className="text-lg font-semibold text-foreground">{brand} {model}</div>
-          <div className="text-sm text-muted-foreground mt-1">{color}</div>
         </div>
       </div>
 
       <div className="flex items-center gap-2">
         <div className="text-right">
           <div className="font-semibold text-sm">{plate}</div>
-          <div className="text-xs text-muted-foreground">Plate number</div>
+                    <div className="text-sm text-muted-foreground  flex items-center justify-end">{color}</div>
+
         </div>
         
         {onDelete && (
