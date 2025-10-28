@@ -47,8 +47,10 @@ export const uploadEndpoints = {
 
 export const feedbackEndpoints = {
 	submitOrderFeedback: (id: string) => `/api/v1/orders/${id}/feedback`,
-	serviceFeedback: (id: string) => `/api/v1/services/${id}/feedback`,
+	serviceFeedback: (id: string) => `/api/v1/users/services/${id}/feedbacks`,
 	myFeedback: '/api/v1/users/my-feedback',
-	one: (id: string) => `/api/v1/feedback/${id}`
+	one: (id: string) => `/api/v1/feedback/${id}`,
+	createServiceFeedback: (id: string) => `/api/v1/users/services/${id}/feedbacks`,
+	deleteServiceFeedback: (id: string, feedbackId: string) => `/api/v1/users/services/${id}/feedbacks/${feedbackId}`
 } as const
 

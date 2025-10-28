@@ -1,14 +1,12 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { 
-  Star, 
-  MapPin, 
-  Clock, 
-  Share2, 
-  Phone, 
-  Globe, 
-  Instagram, 
-  Bookmark,
+import {
+  Star,
+  MapPin,
+  Clock,
+  Phone,
+  Globe,
+  Instagram,
   ArrowLeft,
   ShoppingBag,
   Coffee,
@@ -18,13 +16,15 @@ import {
   Calendar,
   Users,
   Plus,
-  Minus
+  Minus,
+  MessageCircle
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useStationDetails, useStationTimeSlots } from "@/config/queries/stations/station.queries";
 import { useCreateOrder } from "@/config/queries/orders/order.queries";
 import { useUserVehicles as useVehicles } from "@/config/queries/vehicles/vehicles.queries";
+import { useServiceFeedback, useSubmitServiceFeedback } from "@/config/queries/feedback/feedback.queries";
 
 const StationDetails: React.FC = () => {
   const { id } = useParams();
@@ -39,11 +39,17 @@ const StationDetails: React.FC = () => {
   const [refuelingType, setRefuelingType] = useState<'volume' | 'fill_in_amount'>('volume');
   const [refuelingVolume, setRefuelingVolume] = useState<number>(1);
   const [refuelingAmount, setRefuelingAmount] = useState<number>(1000);
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [feedbackRating, setFeedbackRating] = useState<number>(5);
+  const [feedbackComment, setFeedbackComment] = useState<string>('');
+  const [selectedOrderId, setSelectedOrderId] = useState<string>('');
 
   const { data: stationData, isLoading, error } = useStationDetails(id!);
   const { data: vehiclesData } = useVehicles();
   const { mutate: createOrder, isPending: isCreatingOrder } = useCreateOrder();
-  
+  const { data: feedbacksData, isLoading: isLoadingFeedbacks } = useServiceFeedback(stationData?.data.service_id!, { page: 1, limit: 10 });
+  const { mutate: submitFeedback, isPending: isSubmittingFeedback } = useSubmitServiceFeedback();
+
   const { data: timeSlotsData } = useStationTimeSlots(id!, {
     date: selectedDate,
     fuel_type_id: selectedFuelType
@@ -75,8 +81,8 @@ const StationDetails: React.FC = () => {
 
     // Create proper ISO datetime format with UTC timezone
     const scheduledDateTime = `${selectedDate}T${selectedTimeSlot}:00.000Z`;
-    
-    
+
+
     createOrder({
       station_id: id!,
       fuel_type_id: selectedFuelType,
@@ -95,6 +101,27 @@ const StationDetails: React.FC = () => {
       }
     });
   };
+
+  const handleSubmitFeedback = () => {
+    if (!feedbackComment.trim() || !selectedOrderId) {
+      return;
+    }
+
+    submitFeedback({
+      serviceId: stationData?.data.service_id!,
+      rating: feedbackRating,
+      comment: feedbackComment,
+      order_id: selectedOrderId
+    }, {
+      onSuccess: () => {
+        setShowFeedbackForm(false);
+        setFeedbackComment('');
+        setSelectedOrderId('');
+        setFeedbackRating(5);
+      }
+    });
+  };
+
 
   const tabs = ["About", "Services", "Time Slots", "Feedbacks"];
 
@@ -238,23 +265,46 @@ const StationDetails: React.FC = () => {
 
       {/* Action Buttons */}
       <div className="flex justify-between mb-6 border-b pb-4">
-        <Button variant="outline" size="icon" title="Ulashish">
-          <Share2 className="w-5 h-5" />
-        </Button>
         {station.phone && (
-          <Button variant="outline" size="icon" title="Telefon">
+          <Button
+            variant="outline"
+            size="icon"
+            title="Telefon"
+            onClick={() => window.open(`tel:${station.phone}`, '_self')}
+          >
             <Phone className="w-5 h-5" />
           </Button>
         )}
-        <Button variant="outline" size="icon" title="Veb-sayt">
-          <Globe className="w-5 h-5" />
-        </Button>
-        <Button variant="outline" size="icon" title="Instagram">
-          <Instagram className="w-5 h-5" />
-        </Button>
-        <Button variant="outline" size="icon" title="Saqlash">
-          <Bookmark className="w-5 h-5" />
-        </Button>
+        {(station as any).website && (
+          <Button
+            variant="outline"
+            size="icon"
+            title="Veb-sayt"
+            onClick={() => window.open((station as any).website, '_blank')}
+          >
+            <Globe className="w-5 h-5" />
+          </Button>
+        )}
+        {(station as any).instagram && (
+          <Button
+            variant="outline"
+            size="icon"
+            title="Instagram"
+            onClick={() => window.open((station as any).instagram, '_blank')}
+          >
+            <Instagram className="w-5 h-5" />
+          </Button>
+        )}
+        {(station as any).telegram && (
+          <Button
+            variant="outline"
+            size="icon"
+            title="Telegram"
+            onClick={() => window.open((station as any).telegram, '_blank')}
+          >
+            <MessageCircle className="w-5 h-5" />
+          </Button>
+        )}
       </div>
 
       {/* Tab Content */}
@@ -285,7 +335,7 @@ const StationDetails: React.FC = () => {
               {station.work_times?.map((workTime, index) => {
                 const dayNames = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba'];
                 const dayName = dayNames[workTime.day_of_week] || `Kun ${workTime.day_of_week}`;
-                
+
                 return (
                   <div key={index} className="flex items-center gap-2">
                     <Clock className="w-4 h-4" />
@@ -461,9 +511,123 @@ const StationDetails: React.FC = () => {
           )}
         </div>
       )}
+      {activeTab === "Feedbacks" && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-semibold">Fikr-mulohazalar</h3>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowFeedbackForm(true)}
+            >
+              Fikr qoldirish
+            </Button>
+          </div>
+
+          {/* Feedback Summary */}
+          {feedbacksData?.summary && (
+            <div className="bg-card p-4 rounded-lg border mb-4">
+              <div className="flex items-center gap-4 mb-3">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">
+                    {feedbacksData.summary.average_rating.toFixed(1)}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`w-4 h-4 ${star <= Math.round(feedbacksData.summary.average_rating)
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'text-gray-300'
+                          }`}
+                      />
+                    ))}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {feedbacksData.summary.total_reviews} ta sharh
+                  </div>
+                </div>
+                <div className="flex-1">
+                  {[5, 4, 3, 2, 1].map((rating) => (
+                    <div key={rating} className="flex items-center gap-2 mb-1">
+                      <span className="text-sm w-3">{rating}</span>
+                      <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-yellow-400 h-2 rounded-full"
+                          style={{
+                            width: `${(feedbacksData.summary.rating_distribution[rating.toString() as keyof typeof feedbacksData.summary.rating_distribution] / feedbacksData.summary.total_reviews) * 100}%`
+                          }}
+                        />
+                      </div>
+                      <span className="text-xs text-muted-foreground w-8">
+                        {feedbacksData.summary.rating_distribution[rating.toString() as keyof typeof feedbacksData.summary.rating_distribution]}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Feedbacks List */}
+          {isLoadingFeedbacks ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <div className="animate-pulse">
+                <div className="h-4 bg-muted rounded mb-2" />
+                <div className="h-4 bg-muted rounded mb-2" />
+                <div className="h-4 bg-muted rounded" />
+              </div>
+            </div>
+          ) : feedbacksData?.data && feedbacksData.data.length > 0 ? (
+            <div className="space-y-4">
+              {feedbacksData.data.map((feedback) => (
+                <div key={feedback.id} className="bg-card p-4 rounded-lg border">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`w-4 h-4 ${star <= feedback.rating
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : 'text-gray-300'
+                              }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-sm font-medium">{feedback.rating}/5</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {new Date(feedback.created_at).toLocaleDateString('uz-UZ')}
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {feedback.comment}
+                  </p>
+                  {feedback.user && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>{feedback.user.full_name}</span>
+                      {feedback.order && (
+                        <span>• Buyurtma: {feedback.order.order_number}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <Star className="w-12 h-12 mx-auto mb-2 opacity-50" />
+              <p>Hozircha fikr-mulohaza yo'q</p>
+              <p className="text-sm">Birinchi fikr-mulohazani siz qoldiring!</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Order Button */}
-      <Button 
+      <Button
         className="w-full py-6 text-lg bg-primary hover:bg-primary/90"
         disabled={!station.is_open}
         onClick={handleBookingClick}
@@ -477,9 +641,9 @@ const StationDetails: React.FC = () => {
           <div className="bg-background rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Band qilish</h3>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setShowBookingModal(false)}
               >
                 ✕
@@ -571,13 +735,12 @@ const StationDetails: React.FC = () => {
                               setSelectedUnit(slot.unit_id);
                             }
                           }}
-                          className={`p-2 rounded-lg text-sm font-medium border transition-colors ${
-                            selectedTimeSlot === slot.time
-                              ? 'bg-primary text-primary-foreground'
-                              : slot.available
+                          className={`p-2 rounded-lg text-sm font-medium border transition-colors ${selectedTimeSlot === slot.time
+                            ? 'bg-primary text-primary-foreground'
+                            : slot.available
                               ? 'bg-background hover:bg-muted'
                               : 'bg-muted text-muted-foreground cursor-not-allowed'
-                          }`}
+                            }`}
                         >
                           {slot.time}
                         </button>
@@ -610,7 +773,7 @@ const StationDetails: React.FC = () => {
                     Summa
                   </Button>
                 </div>
-                
+
                 {refuelingType === 'volume' ? (
                   <div className="flex items-center gap-2">
                     <Button
@@ -663,6 +826,100 @@ const StationDetails: React.FC = () => {
                   disabled={isCreatingOrder || !selectedVehicle || !selectedFuelType || !selectedUnit || !selectedTimeSlot || (refuelingType === 'volume' && refuelingVolume < 1) || (refuelingType === 'fill_in_amount' && refuelingAmount < 1000)}
                 >
                   {isCreatingOrder ? 'Yaratilmoqda...' : 'Band qilish'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Feedback Form Modal */}
+      {showFeedbackForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-background rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Fikr qoldirish</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowFeedbackForm(false)}
+              >
+                ✕
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Order Selection */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">Buyurtma tanlang</label>
+                <select
+                  value={selectedOrderId}
+                  onChange={(e) => setSelectedOrderId(e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                >
+                  <option value="">Buyurtma tanlang</option>
+                  {/* This would need to be populated with user's completed orders for this station */}
+                  <option value="sample-order-id">Buyurtma #12345</option>
+                </select>
+              </div>
+
+              {/* Rating */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">Baholash</label>
+                <div className="flex items-center gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => setFeedbackRating(star)}
+                      className={`p-1 rounded ${star <= feedbackRating
+                        ? 'text-yellow-400'
+                        : 'text-gray-300'
+                        }`}
+                    >
+                      <Star
+                        className={`w-6 h-6 ${star <= feedbackRating
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'text-gray-300'
+                          }`}
+                      />
+                    </button>
+                  ))}
+                  <span className="text-sm text-muted-foreground ml-2">
+                    {feedbackRating}/5
+                  </span>
+                </div>
+              </div>
+
+              {/* Comment */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">Fikr-mulohaza</label>
+                <textarea
+                  value={feedbackComment}
+                  onChange={(e) => setFeedbackComment(e.target.value)}
+                  className="w-full p-2 border rounded-md h-24 resize-none"
+                  placeholder="Fikr-mulohazangizni yozing..."
+                  maxLength={500}
+                />
+                <div className="text-xs text-muted-foreground mt-1">
+                  {feedbackComment.length}/500
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowFeedbackForm(false)}
+                >
+                  Bekor qilish
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={handleSubmitFeedback}
+                  disabled={isSubmittingFeedback || !feedbackComment.trim() || !selectedOrderId}
+                >
+                  {isSubmittingFeedback ? 'Yuborilmoqda...' : 'Yuborish'}
                 </Button>
               </div>
             </div>

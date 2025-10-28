@@ -24,6 +24,12 @@ export interface SubmitOrderFeedbackRequest {
     comment: string
 }
 
+export interface SubmitServiceFeedbackRequest {
+    rating: number
+    comment: string
+    order_id: string
+}
+
 export interface Feedback {
     id: string
     service_id?: string
@@ -194,6 +200,49 @@ export const useDeleteFeedback = () => {
             return data
         },
         onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: [feedbackEndpoints.myFeedback] })
+            showSuccess('Fikr-mulohaza muvaffaqiyatli o\'chirildi')
+        },
+        onError: () => {
+            showError('Fikr-mulohazani o\'chirishda xatolik yuz berdi')
+        }
+    })
+}
+
+export const useSubmitServiceFeedback = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: async ({ serviceId, ...request }: { serviceId: string } & SubmitServiceFeedbackRequest): Promise<ApiResponse<Feedback>> => {
+            const { data } = await axiosPrivate.post<ApiResponse<Feedback>>(
+                feedbackEndpoints.createServiceFeedback(serviceId),
+                request
+            )
+            return data
+        },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: [feedbackEndpoints.serviceFeedback(variables.serviceId)] })
+            queryClient.invalidateQueries({ queryKey: [feedbackEndpoints.myFeedback] })
+            showSuccess('Fikr-mulohaza muvaffaqiyatli yuborildi')
+        },
+        onError: () => {
+            showError('Fikr-mulohaza yuborishda xatolik yuz berdi')
+        }
+    })
+}
+
+export const useDeleteServiceFeedback = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: async ({ serviceId, feedbackId }: { serviceId: string, feedbackId: string }): Promise<ApiResponse<DeleteFeedbackResponse>> => {
+            const { data } = await axiosPrivate.delete<ApiResponse<DeleteFeedbackResponse>>(
+                feedbackEndpoints.deleteServiceFeedback(serviceId, feedbackId)
+            )
+            return data
+        },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: [feedbackEndpoints.serviceFeedback(variables.serviceId)] })
             queryClient.invalidateQueries({ queryKey: [feedbackEndpoints.myFeedback] })
             showSuccess('Fikr-mulohaza muvaffaqiyatli o\'chirildi')
         },

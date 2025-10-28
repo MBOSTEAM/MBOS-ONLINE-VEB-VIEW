@@ -98,6 +98,10 @@ export interface StationDetails extends Omit<StationListItem, 'fuel_types' | 'wo
     latitude: number | null
     longitude: number | null
     phone: string | null
+    website: string | null
+    service_id: string | null
+    instagram: string | null
+    telegram: string | null
     preview_photos?: PreviewPhoto[]
     rating: number | null
     reviews_count: number | null
