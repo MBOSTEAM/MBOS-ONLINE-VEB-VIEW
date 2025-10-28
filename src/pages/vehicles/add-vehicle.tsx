@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { useVehicleParams, useAddVehicle, useBrandsInfinite, useModelsByBrandInfinite } from '@/config/queries/vehicles/vehicles.queries'
 
 export default function AddVehicle() {
@@ -335,7 +334,7 @@ export default function AddVehicle() {
                   key={c.value}
                   onClick={() => handleColorChange(c.value)}
                   className={`p-4 rounded-lg border cursor-pointer hover:border-primary transition-colors
-                    flex items-center justify-center text-center min-h-[80px]
+                    flex items-center justify-center text-center 
                     ${color === c.value ? 'border-primary bg-primary/5' : 'border-border'}
                   `}
                 >
