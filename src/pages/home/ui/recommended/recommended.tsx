@@ -52,7 +52,7 @@ export default function Recommended() {
         <CarouselContent>
           {stations.map((station) => (
             <CarouselItem key={station.id}>
-              <Link to={`/stations/${station.id}`}>
+              <Link to={`/station/${station.id}`}>
                 <div className="rounded-2xl overflow-hidden bg-muted shadow-sm border border-border hover:shadow-md transition-shadow cursor-pointer">
                   <CardContent className="p-0">
                     {/* Image section */}
