@@ -9,13 +9,56 @@ const SignIn = () => {
   const [phoneNumber, setPhoneNumber] = useState('')
   const { mutate: sendOtp, isPending } = useSendOtp()
 
+  // Format phone number as +998XXXXXXXXX (max 9 digits after +998)
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-digit characters
+    const digits = value.replace(/\D/g, '')
+    
+    // If starts with 998, add + prefix
+    if (digits.startsWith('998')) {
+      const withoutCountryCode = digits.slice(3)
+      // Limit to 9 digits after country code
+      const limitedDigits = withoutCountryCode.slice(0, 9)
+      return `+998${limitedDigits}`
+    }
+    
+    // If starts with +998, handle it
+    if (value.startsWith('+998')) {
+      const withoutPrefix = digits.slice(3)
+      // Limit to 9 digits after country code
+      const limitedDigits = withoutPrefix.slice(0, 9)
+      return `+998${limitedDigits}`
+    }
+    
+    // If just digits, add +998 prefix
+    if (digits.length > 0) {
+      // Limit to 9 digits after country code
+      const limitedDigits = digits.slice(0, 9)
+      return `+998${limitedDigits}`
+    }
+    
+    return '+998'
+  }
+
+  // Extract clean phone number for API
+  const getCleanPhoneNumber = (formatted: string) => {
+    const digits = formatted.replace(/\D/g, '')
+    return digits.startsWith('998') ? `+${digits}` : `+998${digits}`
+  }
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value)
+    setPhoneNumber(formatted)
+  }
+
   const handleNext = () => {
     if (phoneNumber.trim()) {
-      sendOtp(phoneNumber, {
+      const cleanPhone = getCleanPhoneNumber(phoneNumber)
+      sendOtp(cleanPhone, {
         onSuccess: (response) => {
           navigate('/verify-phone', { 
             state: { 
-              phoneNumber,
+              phoneNumber: cleanPhone,
               verification_token: response.data.verification_token
             } 
           })
@@ -52,9 +95,9 @@ const SignIn = () => {
                 <label className="block text-xl font-medium text-black mb-2">Phone number</label>
                 <Input
                   type="tel"
-                  placeholder="+998"
+                  placeholder="+998XXXXXXXXX"
                   value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  onChange={handlePhoneChange}
                   className="w-full bg-gray-100 border-0 text-gray-900 placeholder-gray-400 rounded-lg py-3 px-4"
                 />
               </div>

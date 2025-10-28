@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useUserVehicles, useDeleteVehicle } from '@/config/queries/vehicles/vehicles.queries'
 import { MoreVertical, Trash2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 const VehicleRow: React.FC<{
   brand: string
@@ -76,12 +77,26 @@ const VehicleRow: React.FC<{
 export default function Vehicles() {
   const { data: vehiclesData, isLoading } = useUserVehicles()
   const { mutate: deleteVehicle, isPending: isDeleting } = useDeleteVehicle()
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [vehicleToDelete, setVehicleToDelete] = useState<{id: string, brand: string, model: string, plate: string} | null>(null)
 
   const vehicles = vehiclesData?.data || []
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this vehicle?')) {
-      deleteVehicle(id)
+  const handleDeleteClick = (vehicle: {id: string, brand: string, model: string, plate_number: string}) => {
+    setVehicleToDelete({
+      id: vehicle.id,
+      brand: vehicle.brand,
+      model: vehicle.model,
+      plate: vehicle.plate_number
+    })
+    setShowDeleteModal(true)
+  }
+
+  const handleConfirmDelete = () => {
+    if (vehicleToDelete) {
+      deleteVehicle(vehicleToDelete.id)
+      setShowDeleteModal(false)
+      setVehicleToDelete(null)
     }
   }
 
@@ -129,7 +144,7 @@ export default function Vehicles() {
               model={vehicle.model}
               plate={vehicle.plate_number}
               color={vehicle.color}
-              onDelete={() => handleDelete(vehicle.id)}
+              onDelete={() => handleDeleteClick(vehicle)}
               isDeleting={isDeleting}
             />
           ))
@@ -141,6 +156,49 @@ export default function Vehicles() {
           <button className="w-full bg-black text-white py-3 rounded-lg font-medium">Add Vehicle</button>
         </Link>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && vehicleToDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-background rounded-xl p-6 w-full max-w-md">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-full bg-red-100">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold">Transport vositasini o'chirish</h3>
+            </div>
+            <p className="text-muted-foreground mb-6">
+              <strong className="text-red-600">DIQQAT!</strong> Bu transport vositasini o'chirishni tasdiqlaysizmi?
+              <br />
+              <br />
+              <span className="font-medium">
+                {vehicleToDelete.brand} {vehicleToDelete.model} - {vehicleToDelete.plate}
+              </span>
+              <br />
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setShowDeleteModal(false)
+                  setVehicleToDelete(null)
+                }}
+              >
+                Bekor qilish
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'O\'chirilmoqda...' : 'O\'chirish'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

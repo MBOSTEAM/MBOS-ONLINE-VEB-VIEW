@@ -6,17 +6,23 @@ import {
   Languages,
   Mail,
   DoorOpen,
+  Trash2,
 } from "lucide-react"
 import { useUserProfile } from "@/config/queries/users/profile.queries"
 import { useWallet } from "@/config/queries/wallet/wallet.queries"
 import { useLogout } from "@/config/queries/auth/auth.queries"
 import { Link } from "react-router-dom"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
 const baseURL = import.meta.env.VITE_API_URL_UPLOAD
 
 export default function Profile() {
   const { data: profile, isLoading: profileLoading } = useUserProfile()
   const { data: wallet, isLoading: walletLoading } = useWallet()
   const { mutate: logout } = useLogout()
+  
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   if (profileLoading || walletLoading) {
     return (
@@ -32,6 +38,12 @@ export default function Profile() {
 
   const handleLogout = () => {
     logout(refreshToken)
+    setShowLogoutModal(false)
+  }
+
+  const handleDeleteAccount = () => {
+    console.log('Delete account functionality to be implemented')
+    setShowDeleteModal(false)
   }
 
   return (
@@ -47,7 +59,7 @@ export default function Profile() {
           <div className="bg-black text-white px-3 py-1 rounded text-sm font-bold">MBOS</div>
           <span className="text-gray-900 font-medium">Online</span>
         </div>
-        <button onClick={handleLogout} className="p-2 rounded-full bg-muted cursor-pointer">
+        <button onClick={() => setShowLogoutModal(true)} className="p-2 rounded-full bg-muted cursor-pointer">
           <DoorOpen className="w-5 h-5 text-muted-foreground" />
         </button>
       </div>
@@ -106,10 +118,17 @@ export default function Profile() {
           {[
             { icon: <Languages className="w-5 h-5" />, text: "Language" },
             { icon: <Mail className="w-5 h-5" />, text: "Contact Us" },
+            { 
+              icon: <Trash2 className="w-5 h-5 text-red-500" />, 
+              text: "Delete Account", 
+              onClick: () => setShowDeleteModal(true),
+              className: "text-red-500 hover:text-red-600"
+            },
           ].map((item) => (
             <div
               key={item.text}
-              className="flex items-center gap-3 px-4 py-3 text-foreground hover:bg-accent rounded-xl transition"
+              onClick={item.onClick}
+              className={`flex items-center gap-3 px-4 py-3 text-foreground hover:bg-accent rounded-xl transition cursor-pointer ${item.className || ''}`}
             >
               {item.icon}
               <span className="text-sm font-medium">{item.text}</span>
@@ -117,6 +136,72 @@ export default function Profile() {
           ))}
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-background rounded-xl p-6 w-full max-w-md">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-full bg-orange-100">
+                <DoorOpen className="w-5 h-5 text-orange-600" />
+              </div>
+              <h3 className="text-lg font-semibold">Tizimdan chiqish</h3>
+            </div>
+            <p className="text-muted-foreground mb-6">
+              Haqiqatdan ham tizimdan chiqmoqchimisiz? Barcha ma'lumotlaringiz saqlanib qoladi.
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowLogoutModal(false)}
+              >
+                Bekor qilish
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={handleLogout}
+              >
+                Chiqish
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-background rounded-xl p-6 w-full max-w-md">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-full bg-red-100">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold">Hisobni o'chirish</h3>
+            </div>
+            <p className="text-muted-foreground mb-6">
+              <strong className="text-red-600">DIQQAT!</strong> Bu amalni bekor qilib bo'lmaydi. 
+              Barcha ma'lumotlaringiz, buyurtmalaringiz va balansingiz butunlay o'chiriladi.
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                Bekor qilish
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={handleDeleteAccount}
+              >
+                O'chirish
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
