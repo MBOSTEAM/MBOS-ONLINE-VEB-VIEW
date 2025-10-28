@@ -49,39 +49,6 @@ const StationDetails: React.FC = () => {
     fuel_type_id: selectedFuelType
   });
 
-  // Mock data for time slots when API doesn't return data
-  const mockTimeSlots = {
-    data: {
-      slots: [
-        { time: "08:00", available: true, queue_length: 0, unit_id: null },
-        { time: "08:30", available: true, queue_length: 1, unit_id: null },
-        { time: "09:00", available: true, queue_length: 0, unit_id: null },
-        { time: "09:30", available: false, queue_length: 3, unit_id: null },
-        { time: "10:00", available: true, queue_length: 0, unit_id: null },
-        { time: "10:30", available: true, queue_length: 2, unit_id: null },
-        { time: "11:00", available: true, queue_length: 0, unit_id: null },
-        { time: "11:30", available: false, queue_length: 4, unit_id: null },
-        { time: "12:00", available: true, queue_length: 1, unit_id: null },
-        { time: "12:30", available: true, queue_length: 0, unit_id: null },
-        { time: "13:00", available: true, queue_length: 0, unit_id: null },
-        { time: "13:30", available: false, queue_length: 2, unit_id: null },
-        { time: "14:00", available: true, queue_length: 0, unit_id: null },
-        { time: "14:30", available: true, queue_length: 1, unit_id: null },
-        { time: "15:00", available: true, queue_length: 0, unit_id: null },
-        { time: "15:30", available: false, queue_length: 3, unit_id: null },
-        { time: "16:00", available: true, queue_length: 0, unit_id: null },
-        { time: "16:30", available: true, queue_length: 2, unit_id: null },
-        { time: "17:00", available: true, queue_length: 0, unit_id: null },
-        { time: "17:30", available: false, queue_length: 5, unit_id: null },
-        { time: "18:00", available: true, queue_length: 1, unit_id: null }
-      ]
-    }
-  };
-
-  // Use mock data if API doesn't return data
-  const finalTimeSlotsData = timeSlotsData?.data?.slots && timeSlotsData.data.slots.length > 0 
-    ? timeSlotsData 
-    : mockTimeSlots;
 
 
   const handleBack = () => {
@@ -106,7 +73,7 @@ const StationDetails: React.FC = () => {
       return;
     }
 
-    // Create proper ISO datetime format
+    // Create proper ISO datetime format with UTC timezone
     const scheduledDateTime = `${selectedDate}T${selectedTimeSlot}:00.000Z`;
     
     
@@ -458,11 +425,11 @@ const StationDetails: React.FC = () => {
           </div>
 
           {/* Time Slots Display */}
-          {selectedFuelType && finalTimeSlotsData?.data ? (
+          {selectedFuelType && timeSlotsData?.data ? (
             <div className="mt-4">
               <h4 className="font-medium mb-3">Mavjud vaqtlar ({selectedDate})</h4>
               <div className="grid grid-cols-3 gap-2">
-                {finalTimeSlotsData.data.slots.map((slot, index) => (
+                {timeSlotsData.data.slots.map((slot, index) => (
                   <button
                     key={index}
                     disabled={!slot.available}
@@ -561,6 +528,7 @@ const StationDetails: React.FC = () => {
                   value={selectedUnit}
                   onChange={(e) => setSelectedUnit(e.target.value)}
                   className="w-full p-2 border rounded-md"
+                  disabled
                 >
                   <option value="">Birlik tanlang</option>
                   {station.units?.map((unit) => (
@@ -569,6 +537,9 @@ const StationDetails: React.FC = () => {
                     </option>
                   ))}
                 </select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Birlik vaqt tanlangandan keyin avtomatik tanlanadi
+                </p>
               </div>
 
               {/* Date Selection */}
@@ -587,13 +558,19 @@ const StationDetails: React.FC = () => {
               {selectedFuelType && (
                 <div>
                   <label className="text-sm font-medium mb-2 block">Vaqt</label>
-                  {finalTimeSlotsData?.data?.slots && finalTimeSlotsData.data.slots.length > 0 ? (
+                  {timeSlotsData?.data?.slots && timeSlotsData.data.slots.length > 0 ? (
                     <div className="grid grid-cols-3 gap-2">
-                      {finalTimeSlotsData.data.slots.map((slot, index) => (
+                      {timeSlotsData.data.slots.map((slot, index) => (
                         <button
                           key={index}
                           disabled={!slot.available}
-                          onClick={() => setSelectedTimeSlot(slot.time)}
+                          onClick={() => {
+                            setSelectedTimeSlot(slot.time);
+                            // Set unit_id from the selected slot
+                            if (slot.unit_id) {
+                              setSelectedUnit(slot.unit_id);
+                            }
+                          }}
                           className={`p-2 rounded-lg text-sm font-medium border transition-colors ${
                             selectedTimeSlot === slot.time
                               ? 'bg-primary text-primary-foreground'
