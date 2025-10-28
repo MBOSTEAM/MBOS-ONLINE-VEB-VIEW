@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { useVehicleParams, useAddVehicle, useBrandsInfinite, useModelsByBrandInfinite } from '@/config/queries/vehicles/vehicles.queries'
-import PaginatedSelect from './paginated-select'
 
 export default function AddVehicle() {
   const navigate = useNavigate()
@@ -74,7 +73,7 @@ export default function AddVehicle() {
   const handleBrandChange = (value: string) => {
     const selected = brandsOptions.find(b => b.value === value)
     setBrandId(value)
-    setBrandName(selected?.label || '')
+    setBrandName(selected?.label ?? selected?.value ?? value)
     setModel('') // Reset model when brand changes
   }
 
@@ -91,15 +90,31 @@ export default function AddVehicle() {
   }
 
   const handleSubmit = () => {
-    if (!brandName || !plateNumber || !year) {
-      alert('Brand, plate number va year maydonlarini to\'ldiring')
+    // Debug log to see all values
+    console.log('Form values:', {
+      brandName,
+      model,
+      color,
+      plateNumber,
+      year,
+    })
+
+    if (!brandName || !model || !color || !plateNumber || !year) {
+      alert('Barcha maydonlarni to\'ldiring')
+      console.log('Missing fields:', {
+        brandName: !brandName,
+        model: !model,
+        color: !color,
+        plateNumber: !plateNumber,
+        year: !year
+      })
       return
     }
 
     const submitData = {
       brand: String(brandName),
-      model: model ? String(model) : '', // Model ixtiyoriy, string ga o'zgartirildi
-      color: color ? String(color) : '', // Color ixtiyoriy, string ga o'zgartirildi
+      model: String(model),
+      color: String(color),
       plate_number: String(plateNumber),
       year: parseInt(year)
     }
@@ -148,72 +163,145 @@ export default function AddVehicle() {
         <h1 className="text-lg font-semibold">Add vehicle</h1>
       </div>
 
-      <form className="space-y-5">
-        <PaginatedSelect
-          options={brandsOptions}
-          value={brandId}
-          onChange={handleBrandChange}
-          placeholder="Select brand"
-          label="Brand"
-          onLoadMore={handleLoadMoreBrands}
-          hasMore={hasNextBrands || false}
-          isLoading={isLoadingBrands}
-        />
-
-        <PaginatedSelect
-          options={modelsOptions}
-          value={model}
-          onChange={setModel}
-          placeholder={!brandId ? "Avval brandni tanlang" : "Select model (optional)"}
-          label="Model (optional)"
-          onLoadMore={handleLoadMoreModels}
-          hasMore={hasNextModels || false}
-          isLoading={isLoadingModels}
-          disabled={!brandId}
-        />
-        <div>
-          <label className="block mb-2 text-sm font-medium text-foreground">Color (optional)</label>
-          <Select value={color} onValueChange={setColor}>
-            <SelectTrigger className="w-full bg-muted">
-              <SelectValue placeholder="Select color (optional)" />
-            </SelectTrigger>
-            <SelectContent>
-              {colors.map((c, index) => (
-                <SelectItem key={`color-${index}`} value={c.value}>
-                  {c.label}
-                </SelectItem>
+      <div className="space-y-6">
+        {/* Brand Selection */}
+        {!brandId && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-medium">Select Brand</h2>
+            <div className="grid grid-cols-1 gap-4">
+              {brandsOptions.map((brand) => (
+                <div
+                  key={brand.value}
+                  onClick={() => handleBrandChange(brand.value)}
+                  className={`p-4 rounded-lg border cursor-pointer hover:border-primary transition-colors
+                    flex items-center justify-center text-center min-h-[100px]
+                    ${brandId === brand.value ? 'border-primary bg-primary/5' : 'border-border'}
+                  `}
+                >
+                  {brand.label}
+                </div>
               ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <label className="block mb-2 text-sm font-medium text-foreground">Plate number</label>
-          <Input
-            value={plateNumber}
-            onChange={(e) => setPlateNumber(e.target.value)}
-            className="bg-muted"
-            placeholder="ABXXXC"
-          />
-        </div>
-        <div>
-          <label className="block mb-2 text-sm font-medium text-foreground">Year</label>
-          <Input
-            type="number"
-            value={year}
-            onChange={(e) => setYear(e.target.value)}
-            className="bg-muted"
-            placeholder="2022"
-            min="1900"
-            max={new Date().getFullYear() + 1}
-          />
-        </div>
-      </form>
+            </div>
+            {hasNextBrands && !isLoadingBrands && (
+              <Button
+                variant="outline"
+                onClick={handleLoadMoreBrands}
+                className="w-full"
+              >
+                Load More Brands
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* Model Selection */}
+        {brandId && !model && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" onClick={() => setBrandId('')} className="p-2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </Button>
+              <h2 className="text-lg font-medium">Select Model for {brandName}</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {modelsOptions.map((modelOption) => (
+                <div
+                  key={modelOption.value}
+                  onClick={() => setModel(modelOption.value)}
+                  className={`p-4 rounded-lg border cursor-pointer hover:border-primary transition-colors
+                    flex items-center justify-center text-center min-h-[100px]
+                    ${model === modelOption.value ? 'border-primary bg-primary/5' : 'border-border'}
+                  `}
+                >
+                  {modelOption.label}
+                </div>
+              ))}
+            </div>
+            {hasNextModels && !isLoadingModels && (
+              <Button
+                variant="outline"
+                onClick={handleLoadMoreModels}
+                className="w-full"
+              >
+                Load More Models
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* Color Selection */}
+        {model && !color && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" onClick={() => setModel('')} className="p-2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </Button>
+              <h2 className="text-lg font-medium">Select Color</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {colors.map((c) => (
+                <div
+                  key={c.value}
+                  onClick={() => setColor(c.value)}
+                  className={`p-4 rounded-lg border cursor-pointer hover:border-primary transition-colors
+                    flex items-center justify-center text-center min-h-[80px]
+                    ${color === c.value ? 'border-primary bg-primary/5' : 'border-border'}
+                  `}
+                >
+                  {c.label}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Vehicle Details */}
+        {color && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" onClick={() => setColor('')} className="p-2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </Button>
+              <h2 className="text-lg font-medium">Vehicle Details</h2>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block mb-2 text-sm font-medium text-foreground">Plate number *</label>
+                <Input
+                  value={plateNumber}
+                  onChange={(e) => setPlateNumber(e.target.value)}
+                  className="bg-muted"
+                  placeholder="ABXXXC"
+                />
+              </div>
+              <div>
+                <label className="block mb-2 text-sm font-medium text-foreground">Year *</label>
+                <Input
+                  type="number"
+                  value={year}
+                  onChange={(e) => setYear(e.target.value)}
+                  className="bg-muted"
+                  placeholder="2022"
+                  min="1900"
+                  max={new Date().getFullYear() + 1}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="fixed left-0 right-0 bottom-6 mx-auto max-w-lg px-4">
         <Button
           className="w-full"
           onClick={handleSubmit}
-          disabled={isAdding || !brandName || !plateNumber || !year}
+          disabled={isAdding || !brandName || !model || !color || !plateNumber || !year}
         >
           {isAdding ? 'Adding...' : 'Complete'}
         </Button>
