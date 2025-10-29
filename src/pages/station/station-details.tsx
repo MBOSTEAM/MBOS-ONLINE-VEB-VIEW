@@ -82,9 +82,10 @@ const StationDetails: React.FC = () => {
       return;
     }
 
-    // Create proper ISO datetime format with UTC timezone
-    const scheduledDateTime = `${selectedDate}T${selectedTimeSlot}:00.000Z`;
-
+    // Create proper UTC datetime format
+    // Combine selected date and time slot, then convert to UTC
+    const localDateTime = new Date(`${selectedDate}T${selectedTimeSlot}:00`);
+    const scheduledDateTime = localDateTime.toISOString();
 
     createOrder({
       station_id: id!,
