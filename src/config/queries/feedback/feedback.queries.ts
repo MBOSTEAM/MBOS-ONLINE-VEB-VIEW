@@ -72,6 +72,21 @@ export interface ServiceFeedbackResponse extends PaginatedApiResponse<ServiceFee
     summary: ServiceFeedbackSummary
 }
 
+export interface ActualServiceFeedbackResponse {
+    success: boolean
+    data: {
+        feedbacks: ServiceFeedback[]
+    }
+    error: null
+    validation_error: null
+    pagination: null
+    meta: {
+        timestamp: string
+        request_id: string
+        version: string
+    }
+}
+
 export interface MyFeedbackService {
     title: string
     address: string

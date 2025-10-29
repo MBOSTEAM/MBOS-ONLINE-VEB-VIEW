@@ -73,9 +73,11 @@ export default function BookingCard() {
   }
 
   const scheduledDate = new Date(activeOrder?.scheduled_datetime || Date.now())
-  const month = scheduledDate.toLocaleString('ru-RU', { month: 'short' }).toUpperCase()
+  const months = ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyun',
+                  'Iyul', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek']
+  const month = months[scheduledDate.getMonth()]
   const day = scheduledDate.getDate()
-  const time = scheduledDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+  const time = scheduledDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', hour12: false })
   
   const statusInfo = getStatusBadge(activeOrder.status)
   const stationName = activeOrder.station.name || activeOrder.station.address || 'Station'
@@ -85,12 +87,20 @@ export default function BookingCard() {
       <Card className="overflow-hidden border-0 shadow-sm bg-muted py-1 mt-4 cursor-pointer hover:bg-muted/80 transition-colors">
         <div className="flex items-stretch">
           <div className="flex-1 p-3">
-            <Badge className={`${statusInfo.className} mb-3 inline-block`}>
-              {statusInfo.label}
-            </Badge>
-            <div>
+            <div className="flex items-center justify-between mb-2">
+              <Badge className={`${statusInfo.className} inline-block`}>
+                {statusInfo.label}
+              </Badge>
+              <div className="text-xs text-muted-foreground font-mono">
+                {activeOrder.order_number}
+              </div>
+            </div>
+            <div className="space-y-1">
               <h3 className="font-bold text-lg">{activeOrder.fuel_type}</h3>
-              <p className="text-base text-muted-foreground mt-1">{stationName}</p>
+              <p className="text-base text-muted-foreground">{stationName}</p>
+              <div className="text-sm font-medium text-primary">
+                {activeOrder.total_amount.toLocaleString()} UZS
+              </div>
             </div>
           </div>
 

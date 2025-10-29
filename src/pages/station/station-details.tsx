@@ -25,6 +25,7 @@ import { useStationDetails, useStationTimeSlots } from "@/config/queries/station
 import { useCreateOrder, useOrders } from "@/config/queries/orders/order.queries";
 import { useUserVehicles as useVehicles } from "@/config/queries/vehicles/vehicles.queries";
 import { useServiceFeedback, useSubmitServiceFeedback } from "@/config/queries/feedback/feedback.queries";
+import type { ActualServiceFeedbackResponse } from "@/config/queries/feedback/feedback.queries";
 
 const StationDetails: React.FC = () => {
   const { id } = useParams();
@@ -47,7 +48,7 @@ const StationDetails: React.FC = () => {
   const { data: stationData, isLoading, error } = useStationDetails(id!);
   const { data: vehiclesData } = useVehicles();
   const { mutate: createOrder, isPending: isCreatingOrder } = useCreateOrder();
-  const { data: feedbacksData, isLoading: isLoadingFeedbacks } = useServiceFeedback(stationData?.data.service_id!, { page: 1, limit: 10 });
+  const { data: feedbacksData, isLoading: isLoadingFeedbacks } = useServiceFeedback(stationData?.data.service_id!, { page: 1, limit: 10 }) as { data: ActualServiceFeedbackResponse | undefined, isLoading: boolean };
   const { mutate: submitFeedback, isPending: isSubmittingFeedback } = useSubmitServiceFeedback();
   const { data: ordersData } = useOrders({ status: 'completed', limit: 50 });
 
@@ -192,7 +193,7 @@ const StationDetails: React.FC = () => {
   const baseURL = import.meta.env.VITE_API_URL_UPLOAD;
 
   return (
-    <div className="max-w-xl mx-auto p-4">
+    <div className="max-w-xl mx-auto p-2">
       <button className="mb-4" onClick={handleBack}>
         <ArrowLeft className="w-6 h-6" />
       </button>
@@ -272,6 +273,7 @@ const StationDetails: React.FC = () => {
             variant="outline"
             size="icon"
             title="Telefon"
+            className="w-full"
             onClick={() => window.open(`tel:${station.phone}`, '_self')}
           >
             <Phone className="w-5 h-5" />
@@ -282,6 +284,7 @@ const StationDetails: React.FC = () => {
             variant="outline"
             size="icon"
             title="Veb-sayt"
+            className="w-full"
             onClick={() => window.open((station as any).website, '_blank')}
           >
             <Globe className="w-5 h-5" />
@@ -292,6 +295,7 @@ const StationDetails: React.FC = () => {
             variant="outline"
             size="icon"
             title="Instagram"
+            className="w-full"
             onClick={() => window.open((station as any).instagram, '_blank')}
           >
             <Instagram className="w-5 h-5" />
@@ -302,6 +306,7 @@ const StationDetails: React.FC = () => {
             variant="outline"
             size="icon"
             title="Telegram"
+            className="w-full"
             onClick={() => window.open((station as any).telegram, '_blank')}
           >
             <MessageCircle className="w-5 h-5" />
@@ -476,7 +481,6 @@ const StationDetails: React.FC = () => {
             )}
           </div>
 
-          {/* Time Slots Display */}
           {selectedFuelType && timeSlotsData?.data ? (
             <div className="mt-4">
               <h4 className="font-medium mb-3">Mavjud vaqtlar ({selectedDate})</h4>
@@ -520,56 +524,72 @@ const StationDetails: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
+
               onClick={() => setShowFeedbackForm(true)}
               disabled={stationOrders.length === 0}
             >
+              <MessageCircle className="w-4 h-4 " />
               Fikr qoldirish
             </Button>
           </div>
 
-          {/* Feedback Summary */}
-          {feedbacksData?.summary && (
+          {feedbacksData?.data?.feedbacks && feedbacksData.data.feedbacks.length > 0 && (
             <div className="bg-card p-4 rounded-lg border mb-4">
-              <div className="flex items-center gap-4 mb-3">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">
-                    {feedbacksData.summary.average_rating.toFixed(1)}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`w-4 h-4 ${star <= Math.round(feedbacksData.summary.average_rating)
-                          ? 'fill-yellow-400 text-yellow-400'
-                          : 'text-gray-300'
-                          }`}
-                      />
-                    ))}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {feedbacksData.summary.total_reviews} ta sharh
-                  </div>
-                </div>
-                <div className="flex-1">
-                  {[5, 4, 3, 2, 1].map((rating) => (
-                    <div key={rating} className="flex items-center gap-2 mb-1">
-                      <span className="text-sm w-3">{rating}</span>
-                      <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                      <div className="flex-1 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-yellow-400 h-2 rounded-full"
-                          style={{
-                            width: `${(feedbacksData.summary.rating_distribution[rating.toString() as keyof typeof feedbacksData.summary.rating_distribution] / feedbacksData.summary.total_reviews) * 100}%`
-                          }}
-                        />
+              {(() => {
+                const feedbacks = feedbacksData.data.feedbacks;
+                const totalReviews = feedbacks.length;
+                const averageRating = feedbacks.reduce((sum: number, feedback: any) => sum + feedback.rating, 0) / totalReviews;
+                const ratingDistribution = {
+                  '5': feedbacks.filter((f: any) => f.rating === 5).length,
+                  '4': feedbacks.filter((f: any) => f.rating === 4).length,
+                  '3': feedbacks.filter((f: any) => f.rating === 3).length,
+                  '2': feedbacks.filter((f: any) => f.rating === 2).length,
+                  '1': feedbacks.filter((f: any) => f.rating === 1).length,
+                };
+
+                return (
+                  <div className="flex items-center gap-4 mb-3">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-primary">
+                        {averageRating.toFixed(1)}
                       </div>
-                      <span className="text-xs text-muted-foreground w-8">
-                        {feedbacksData.summary.rating_distribution[rating.toString() as keyof typeof feedbacksData.summary.rating_distribution]}
-                      </span>
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`w-4 h-4 ${star <= Math.round(averageRating)
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : 'text-gray-300'
+                              }`}
+                          />
+                        ))}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {totalReviews} ta sharh
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
+                    <div className="flex-1">
+                      {[5, 4, 3, 2, 1].map((rating) => (
+                        <div key={rating} className="flex items-center gap-2 mb-1">
+                          <span className="text-sm w-3">{rating}</span>
+                          <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                          <div className="flex-1 bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-yellow-400 h-2 rounded-full"
+                              style={{
+                                width: `${(ratingDistribution[rating.toString() as keyof typeof ratingDistribution] / totalReviews) * 100}%`
+                              }}
+                            />
+                          </div>
+                          <span className="text-xs text-muted-foreground w-8">
+                            {ratingDistribution[rating.toString() as keyof typeof ratingDistribution]}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -582,9 +602,9 @@ const StationDetails: React.FC = () => {
                 <div className="h-4 bg-muted rounded" />
               </div>
             </div>
-          ) : feedbacksData?.data && feedbacksData.data.length > 0 ? (
+          ) : feedbacksData?.data?.feedbacks && feedbacksData.data.feedbacks.length > 0 ? (
             <div className="space-y-4">
-              {feedbacksData.data.map((feedback) => (
+              {feedbacksData.data.feedbacks.map((feedback: any) => (
                 <div key={feedback.id} className="bg-card p-4 rounded-lg border">
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
@@ -631,7 +651,7 @@ const StationDetails: React.FC = () => {
 
       {/* Order Button */}
       <Button
-        className="w-full py-6 text-lg bg-primary hover:bg-primary/90"
+        className="w-full py-6 text-lg bg-primary hover:bg-primary/90 mt-4"
         disabled={!station.is_open}
         onClick={handleBookingClick}
       >
@@ -880,7 +900,6 @@ const StationDetails: React.FC = () => {
                 )}
               </div>
 
-              {/* Rating */}
               <div>
                 <label className="text-sm font-medium mb-2 block">Baholash</label>
                 <div className="flex items-center gap-2">
