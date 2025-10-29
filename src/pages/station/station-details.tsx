@@ -19,6 +19,9 @@ import {
   Minus,
   MessageCircle
 } from "lucide-react";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useStationDetails, useStationTimeSlots } from "@/config/queries/stations/station.queries";
@@ -26,6 +29,10 @@ import { useCreateOrder, useOrders } from "@/config/queries/orders/order.queries
 import { useUserVehicles as useVehicles } from "@/config/queries/vehicles/vehicles.queries";
 import { useServiceFeedback, useSubmitServiceFeedback } from "@/config/queries/feedback/feedback.queries";
 import type { ActualServiceFeedbackResponse } from "@/config/queries/feedback/feedback.queries";
+
+// Initialize dayjs plugins
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const StationDetails: React.FC = () => {
   const { id } = useParams();
@@ -82,36 +89,21 @@ const StationDetails: React.FC = () => {
       return;
     }
 
-    // Extract time from slot - the hours/minutes represent Uzbekistan local time
-    // API sends slot.time like "1970-01-31T10:00:00.000Z" where 10:00 is UZB time
-    // We need to convert UZB time to UTC (UZB is UTC+5, so subtract 5 hours)
-    // Example: 10:00 UZB = 05:00 UTC (10 - 5 = 5)
-    const slotTime = new Date(selectedTimeSlot);
-    const uzbHours = slotTime.getUTCHours(); // These represent UZB local time (e.g., 10)
-    const uzbMinutes = slotTime.getUTCMinutes();
-
-    // Convert UZB time to UTC: UZB is UTC+5
-    // 10:00 UZB = 05:00 UTC (10 - 5 = 5)
-    const utcHours = (uzbHours - 5 + 24) % 24;
-
-    // Parse selected date
-    const [year, month, day] = selectedDate.split('-').map(Number);
-
-    // Handle day change if hours wrap around
-    let adjustedDay = day;
-    let adjustedMonth = month;
-    let adjustedYear = year;
-
-    if (uzbHours < 5) {
-      // If subtracting 5 hours would go to previous day
-      const date = new Date(Date.UTC(year, month - 1, day - 1, utcHours, uzbMinutes, 0, 0));
-      adjustedYear = date.getUTCFullYear();
-      adjustedMonth = date.getUTCMonth() + 1;
-      adjustedDay = date.getUTCDate();
-    }
-
-    // Create UTC date object with converted time
-    const scheduledDateTime = new Date(Date.UTC(adjustedYear, adjustedMonth - 1, adjustedDay, utcHours, uzbMinutes, 0, 0)).toISOString();
+    // Extract time from slot.time and combine with selected date
+    // slot.time is the value (e.g., "1970-01-01T13:00:00.000Z" - 13:00 UTC)
+    // We display it as 18:00 in UI (13:00 + 5 hours)
+    // When user selects 18:00, we use the original slot.time value (13:00 UTC)
+    // and combine it with the selected date
+    
+    // Parse slot.time to get UTC hours and minutes
+    const slotTimeUtc = dayjs.utc(selectedTimeSlot);
+    const utcHours = slotTimeUtc.hour();
+    const utcMinutes = slotTimeUtc.minute();
+    
+    // Combine with selected date and keep UTC format
+    // Example: slot.time = "1970-01-01T13:00:00.000Z", selectedDate = "2025-10-29"
+    // Result: "2025-10-29T13:00:00.000Z"
+    const scheduledDateTime = dayjs.utc(`${selectedDate}T${String(utcHours).padStart(2, '0')}:${String(utcMinutes).padStart(2, '0')}:00`).toISOString();
 
     createOrder({
       station_id: id!,
@@ -155,28 +147,59 @@ const StationDetails: React.FC = () => {
 
   const tabs = ["About", "Services", "Time Slots", "Feedbacks"];
 
-  // Helper function to extract time from datetime string
+  // Helper function to extract time from datetime string and convert to Uzbekistan time (+5 hours)
   const extractTime = (dateTimeString: string): string => {
     if (!dateTimeString) return ''
-    const parts = dateTimeString.split(' ')
-    if (parts.length >= 2) {
-      const timePart = parts[1] // Get "HH:MM:SS"
-      return timePart.substring(0, 5) // Return only "HH:MM"
+    
+    try {
+      // Try to parse as ISO format (e.g., "2025-10-29T08:00:00.000Z" or "1970-01-01T13:00:00.000Z")
+      if (dateTimeString.includes('T')) {
+        const utcTime = dayjs.utc(dateTimeString)
+        // Add 5 hours for Uzbekistan timezone (UTC+5)
+        const uzbTime = utcTime.add(5, 'hour')
+        return uzbTime.format('HH:mm')
+      }
+      
+      // Try space-separated format (e.g., "2025-10-29 08:00:00")
+      const parts = dateTimeString.split(' ')
+      if (parts.length >= 2) {
+        // Parse as local time and add 5 hours
+        const localTime = dayjs(dateTimeString)
+        const uzbTime = localTime.add(5, 'hour')
+        return uzbTime.format('HH:mm')
+      }
+      
+      // If it's just time format (e.g., "08:00:00" or "08:00")
+      if (dateTimeString.includes(':')) {
+        const timeOnly = dateTimeString.substring(0, 5)
+        const [hours, minutes] = timeOnly.split(':').map(Number)
+        let uzbHours = (hours + 5) % 24
+        return `${String(uzbHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+      }
+      
+      return dateTimeString
+    } catch (error) {
+      // Fallback: try to extract time from string
+      const parts = dateTimeString.split(' ')
+      if (parts.length >= 2) {
+        const timePart = parts[1]
+        return timePart.substring(0, 5)
+      }
+      return dateTimeString
     }
-    return dateTimeString
   }
 
   // Helper function to format ISO time string to HH:MM format for display
-  // API sends slot.time in UTC format, but the time represents Uzbekistan local time
-  // So we just extract the hours and minutes from UTC and display them as-is
+  // API sends slot.time in UTC format (e.g., "1970-01-01T13:00:00.000Z")
+  // For display, we add +5 hours to show Uzbekistan time (13:00 UTC → 18:00 UZB)
   const formatTimeSlot = (isoTimeString: string): string => {
     if (!isoTimeString) return ''
     try {
-      const date = new Date(isoTimeString)
-      // Extract UTC hours and minutes (API sends time in UTC but it represents local UZB time)
-      const hours = String(date.getUTCHours()).padStart(2, '0')
-      const minutes = String(date.getUTCMinutes()).padStart(2, '0')
-      return `${hours}:${minutes}`
+      // Parse UTC time from slot.time
+      const utcTime = dayjs.utc(isoTimeString)
+      // Add 5 hours for Uzbekistan timezone (UTC+5)
+      const uzbTime = utcTime.add(5, 'hour')
+      return uzbTime.format('HH:mm')
     } catch {
       return isoTimeString
     }

@@ -9,17 +9,54 @@ import {
   CarouselItem,
   CarouselPrevious,
 } from "@/components/ui/carousel"
+import dayjs from "dayjs"
+import utc from "dayjs/plugin/utc"
+
+// Initialize dayjs plugins
+dayjs.extend(utc)
+
 const baseURL = import.meta.env.VITE_API_URL_UPLOAD
 
-// Helper function to extract time from datetime string
+// Helper function to extract time from datetime string and convert to Uzbekistan time (+5 hours)
 const extractTime = (dateTimeString: string): string => {
   if (!dateTimeString) return ''
-  const parts = dateTimeString.split(' ')
-  if (parts.length >= 2) {
-    const timePart = parts[1] // Get "HH:MM:SS"
-    return timePart.substring(0, 5) // Return only "HH:MM"
+  
+  try {
+    // Try to parse as ISO format (e.g., "2025-10-29T08:00:00.000Z" or "1970-01-01T13:00:00.000Z")
+    if (dateTimeString.includes('T')) {
+      const utcTime = dayjs.utc(dateTimeString)
+      // Add 5 hours for Uzbekistan timezone (UTC+5)
+      const uzbTime = utcTime.add(5, 'hour')
+      return uzbTime.format('HH:mm')
+    }
+    
+    // Try space-separated format (e.g., "2025-10-29 08:00:00")
+    const parts = dateTimeString.split(' ')
+    if (parts.length >= 2) {
+      // Parse as local time and add 5 hours
+      const localTime = dayjs(dateTimeString)
+      const uzbTime = localTime.add(5, 'hour')
+      return uzbTime.format('HH:mm')
+    }
+    
+    // If it's just time format (e.g., "08:00:00" or "08:00")
+    if (dateTimeString.includes(':')) {
+      const timeOnly = dateTimeString.substring(0, 5)
+      const [hours, minutes] = timeOnly.split(':').map(Number)
+      let uzbHours = (hours + 5) % 24
+      return `${String(uzbHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+    }
+    
+    return dateTimeString
+  } catch (error) {
+    // Fallback: try to extract time from string
+    const parts = dateTimeString.split(' ')
+    if (parts.length >= 2) {
+      const timePart = parts[1]
+      return timePart.substring(0, 5)
+    }
+    return dateTimeString
   }
-  return dateTimeString
 }
 
 export default function Recommended() {
