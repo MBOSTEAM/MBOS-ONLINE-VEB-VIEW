@@ -83,33 +83,33 @@ const StationDetails: React.FC = () => {
     }
 
     // Extract time from slot - the hours/minutes represent Uzbekistan local time
-    // API sends slot.time like "1970-01-31T17:00:00.000Z" where 17:00 is UZB time
+    // API sends slot.time like "1970-01-31T10:00:00.000Z" where 10:00 is UZB time
     // We need to convert UZB time to UTC (UZB is UTC+5, so subtract 5 hours)
-    // Example: 17:00 UZB = 12:00 UTC, but user expects 13:00 UTC, so UZB is actually UTC+4
+    // Example: 10:00 UZB = 05:00 UTC (10 - 5 = 5)
     const slotTime = new Date(selectedTimeSlot);
-    const uzbHours = slotTime.getUTCHours(); // These represent UZB local time (e.g., 17)
+    const uzbHours = slotTime.getUTCHours(); // These represent UZB local time (e.g., 10)
     const uzbMinutes = slotTime.getUTCMinutes();
-    
-    // Convert UZB time to UTC: UZB is UTC+4 (not UTC+5) based on user feedback
-    // 17:00 UZB = 13:00 UTC (17 - 4 = 13)
-    const utcHours = (uzbHours - 4 + 24) % 24;
-    
+
+    // Convert UZB time to UTC: UZB is UTC+5
+    // 10:00 UZB = 05:00 UTC (10 - 5 = 5)
+    const utcHours = (uzbHours - 5 + 24) % 24;
+
     // Parse selected date
     const [year, month, day] = selectedDate.split('-').map(Number);
-    
+
     // Handle day change if hours wrap around
     let adjustedDay = day;
     let adjustedMonth = month;
     let adjustedYear = year;
-    
-    if (uzbHours < 4) {
-      // If subtracting 4 hours would go to previous day
+
+    if (uzbHours < 5) {
+      // If subtracting 5 hours would go to previous day
       const date = new Date(Date.UTC(year, month - 1, day - 1, utcHours, uzbMinutes, 0, 0));
       adjustedYear = date.getUTCFullYear();
       adjustedMonth = date.getUTCMonth() + 1;
       adjustedDay = date.getUTCDate();
     }
-    
+
     // Create UTC date object with converted time
     const scheduledDateTime = new Date(Date.UTC(adjustedYear, adjustedMonth - 1, adjustedDay, utcHours, uzbMinutes, 0, 0)).toISOString();
 
