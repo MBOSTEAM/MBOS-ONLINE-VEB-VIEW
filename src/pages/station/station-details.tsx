@@ -82,10 +82,36 @@ const StationDetails: React.FC = () => {
       return;
     }
 
-    // Create proper UTC datetime format
-    // Combine selected date and time slot, then convert to UTC
-    const localDateTime = new Date(`${selectedDate}T${selectedTimeSlot}:00`);
-    const scheduledDateTime = localDateTime.toISOString();
+    // Extract time from slot - the hours/minutes represent Uzbekistan local time
+    // API sends slot.time like "1970-01-31T17:00:00.000Z" where 17:00 is UZB time
+    // We need to convert UZB time to UTC (UZB is UTC+5, so subtract 5 hours)
+    // Example: 17:00 UZB = 12:00 UTC, but user expects 13:00 UTC, so UZB is actually UTC+4
+    const slotTime = new Date(selectedTimeSlot);
+    const uzbHours = slotTime.getUTCHours(); // These represent UZB local time (e.g., 17)
+    const uzbMinutes = slotTime.getUTCMinutes();
+    
+    // Convert UZB time to UTC: UZB is UTC+4 (not UTC+5) based on user feedback
+    // 17:00 UZB = 13:00 UTC (17 - 4 = 13)
+    const utcHours = (uzbHours - 4 + 24) % 24;
+    
+    // Parse selected date
+    const [year, month, day] = selectedDate.split('-').map(Number);
+    
+    // Handle day change if hours wrap around
+    let adjustedDay = day;
+    let adjustedMonth = month;
+    let adjustedYear = year;
+    
+    if (uzbHours < 4) {
+      // If subtracting 4 hours would go to previous day
+      const date = new Date(Date.UTC(year, month - 1, day - 1, utcHours, uzbMinutes, 0, 0));
+      adjustedYear = date.getUTCFullYear();
+      adjustedMonth = date.getUTCMonth() + 1;
+      adjustedDay = date.getUTCDate();
+    }
+    
+    // Create UTC date object with converted time
+    const scheduledDateTime = new Date(Date.UTC(adjustedYear, adjustedMonth - 1, adjustedDay, utcHours, uzbMinutes, 0, 0)).toISOString();
 
     createOrder({
       station_id: id!,
@@ -138,6 +164,22 @@ const StationDetails: React.FC = () => {
       return timePart.substring(0, 5) // Return only "HH:MM"
     }
     return dateTimeString
+  }
+
+  // Helper function to format ISO time string to HH:MM format for display
+  // API sends slot.time in UTC format, but the time represents Uzbekistan local time
+  // So we just extract the hours and minutes from UTC and display them as-is
+  const formatTimeSlot = (isoTimeString: string): string => {
+    if (!isoTimeString) return ''
+    try {
+      const date = new Date(isoTimeString)
+      // Extract UTC hours and minutes (API sends time in UTC but it represents local UZB time)
+      const hours = String(date.getUTCHours()).padStart(2, '0')
+      const minutes = String(date.getUTCMinutes()).padStart(2, '0')
+      return `${hours}:${minutes}`
+    } catch {
+      return isoTimeString
+    }
   }
 
 
@@ -495,7 +537,7 @@ const StationDetails: React.FC = () => {
                       : 'bg-muted text-muted-foreground cursor-not-allowed'
                       }`}
                   >
-                    <div>{slot.time}</div>
+                    <div>{formatTimeSlot(slot.time)}</div>
                     {slot.queue_length > 0 && (
                       <div className="text-xs opacity-75">
                         {slot.queue_length} navbat
@@ -766,7 +808,7 @@ const StationDetails: React.FC = () => {
                               : 'bg-muted text-muted-foreground cursor-not-allowed'
                             }`}
                         >
-                          {slot.time}
+                          {formatTimeSlot(slot.time)}
                         </button>
                       ))}
                     </div>
