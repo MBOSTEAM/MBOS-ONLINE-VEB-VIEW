@@ -1,0 +1,45 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run tests
+        run: |
+          bun run build
+
+      - name: Deploy to staging server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          password: ${{ secrets.STAGING_SSH_PASSWORD }}
+          script: |
+            cd /root/apps/mbos-online-web
+            git pull origin main
+            docker compose -f docker-compose.stage.yml down
+            docker compose -f docker-compose.stage.yml build --no-cache
+            docker compose --env-file .env.stage -f docker-compose.stage.yml up -d
+            docker system prune -f
