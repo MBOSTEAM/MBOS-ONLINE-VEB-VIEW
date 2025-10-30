@@ -87,9 +87,9 @@ export default function Profile() {
             {walletData ? `${walletData.balance.toLocaleString('ru-RU')} ${walletData.currency}` : '0 UZS'}
           </h3>
         </div>
-        <button className="bg-blue-400 text-white text-sm px-4 py-1 rounded-md font-medium">
+        <Link to="/wallet" className="bg-blue-400 text-white text-sm px-4 py-1 rounded-md font-medium">
           Wallet
-        </button>
+        </Link>
       </div>
 
       {/* Menu Sections */}

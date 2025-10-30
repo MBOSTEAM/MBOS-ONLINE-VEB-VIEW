@@ -1,6 +1,6 @@
 import { Suspense } from '@/shared/ui/suspense'
 import { createBrowserRouter } from 'react-router-dom'
-import { Auth, Home, Profile, VerifyPhone, SetupProfile, Orders, Vehicles, AddVehicle, StationDetails } from './lazy-pages'
+import { Auth, Home, Profile, VerifyPhone, SetupProfile, Orders, Vehicles, AddVehicle, StationDetails, Wallet } from './lazy-pages'
 import { Layout } from '@/shared/layout/layout'
 import { RequireAuth, RequireGuest } from '@/shared/auth/require-auth'
 
@@ -60,6 +60,14 @@ export const router = createBrowserRouter([
 							</Suspense>
 						)
 					},
+				{
+					path: '/wallet',
+					element: (
+						<Suspense>
+							<Wallet />
+						</Suspense>
+					)
+				},
 					{
 						path: '/orders',
 						element: (
