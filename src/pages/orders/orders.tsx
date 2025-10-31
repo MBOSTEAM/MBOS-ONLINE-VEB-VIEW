@@ -153,7 +153,8 @@ export default function OrdersPage() {
           const scheduledDate = new Date(order.scheduled_datetime)
 
           return (
-            <Card key={order.id} className="flex flex-row items-stretch hover:shadow-md transition-shadow">
+            <Link to={`/orders/${order.id}`}>
+            <Card key={order.id} className="flex flex-row items-stretch hover:shadow-md transition-shadow cursor-pointer">
               <div className="flex-1">
                 <CardHeader className="py-3">
                   <div className="flex items-center justify-between mb-2">
@@ -214,6 +215,7 @@ export default function OrdersPage() {
                 </div>
               </div>
             </Card>
+            </Link>
           )
         })}
       </section>

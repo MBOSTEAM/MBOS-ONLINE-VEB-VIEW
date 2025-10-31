@@ -126,6 +126,7 @@ export interface OrderDetails {
     attendant: any | null
     qr_code: string
     timeline: TimelineEvent[]
+    created_at: string
 }
 
 export interface CreateOrderResponse {

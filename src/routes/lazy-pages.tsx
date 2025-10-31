@@ -2,6 +2,7 @@ import { lazy } from 'react'
 export const Home = lazy(() => import('@/pages/home/home'))
 export const Profile = lazy(() => import('@/pages/profile/profile'))
 export const Orders = lazy(() => import('@/pages/orders/orders'))
+export const OrderDetails = lazy(() => import('@/pages/orders/order-details'))
 export const Vehicles = lazy(() => import('@/pages/vehicles/vehicles'))
 export const AddVehicle = lazy(() => import('@/pages/vehicles/add-vehicle'))
 export const Auth = lazy(()=>import('@/pages/auth/sign-in/sign-in'))
