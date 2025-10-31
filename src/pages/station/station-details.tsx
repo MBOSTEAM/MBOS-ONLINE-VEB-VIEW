@@ -102,7 +102,7 @@ const StationDetails: React.FC = () => {
       unit_id: selectedUnit,
       vehicle_id: selectedVehicle,
       scheduled_datetime: scheduledDateTime,
-      refueling_type: refuelingType,
+      refueling_type: payViaSystem ? refuelingType : null,
       refueling_volume: payViaSystem && refuelingType === 'volume' ? refuelingVolume : null,
       refueling_amount: payViaSystem && refuelingType === 'fill_in_amount' ? refuelingAmount : null,
       payment_method: 'wallet',

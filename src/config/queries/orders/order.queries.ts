@@ -25,7 +25,7 @@ export interface CreateOrderRequest {
     unit_id: string
     vehicle_id: string
     scheduled_datetime: string
-    refueling_type: 'volume' | 'fill_in_amount'
+    refueling_type: 'volume' | 'fill_in_amount' | null
     refueling_volume: number | null
     refueling_amount: number | null
     payment_method: 'wallet' | 'company_wallet'
