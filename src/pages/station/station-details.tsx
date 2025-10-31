@@ -58,7 +58,7 @@ const StationDetails: React.FC = () => {
   const { mutate: createOrder, isPending: isCreatingOrder } = useCreateOrder();
   const { data: feedbacksData, isLoading: isLoadingFeedbacks } = useServiceFeedback(stationData?.data.service_id!, { page: 1, limit: 10 }) as { data: ActualServiceFeedbackResponse | undefined, isLoading: boolean };
   const { mutate: submitFeedback, isPending: isSubmittingFeedback } = useSubmitServiceFeedback();
-  const { data: ordersData } = useOrders({ status: 'completed', limit: 50 });
+  const { data: ordersData } = useOrders({ status: 'confirmed', station_id: id!, limit: 50 });
 
   const { data: timeSlotsData } = useStationTimeSlots(id!, {
     date: selectedDate,
@@ -90,8 +90,8 @@ const StationDetails: React.FC = () => {
       return;
     }
 
-  // Compose selected date with slot time in Asia/Tashkent and keep +05:00 offset
-  const scheduledDateTime = timeToTashkentISO(displayTimeTashkent(selectedTimeSlot), selectedDate);
+    // Compose selected date with slot time in Asia/Tashkent and keep +05:00 offset
+    const scheduledDateTime = timeToTashkentISO(displayTimeTashkent(selectedTimeSlot), selectedDate);
 
     createOrder({
       station_id: id!,
@@ -132,6 +132,7 @@ const StationDetails: React.FC = () => {
     });
   };
 
+  console.log(stationOrders);
 
   const tabs = ["About", "Services", "Time Slots", "Feedbacks"];
 
@@ -881,7 +882,7 @@ const StationDetails: React.FC = () => {
                   {stationOrders.length > 0 ? (
                     stationOrders.map((order) => (
                       <option key={order.id} value={order.id}>
-                        {order.order_number} - {formatTz(order.scheduled_datetime, 'YYYY-MM-DD HH:mm Z')} - {order.fuel_type}
+                        {order.order_number} | {formatTz(order.scheduled_datetime, 'YYYY-MM-DD')} {formatTz(order.scheduled_datetime, 'HH:mm')} - {order.fuel_type}
                       </option>
                     ))
                   ) : (

@@ -194,6 +194,7 @@ export interface ListOrdersParams {
     status?: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'failed' | 'customer_arrived' | 'in_progress' | 'no_show'
     page?: number
     limit?: number
+    station_id?: string
     sort_field?: 'created_at' | 'scheduled_at' | 'total_price'
     sort_order?: 'asc' | 'desc'
 }
