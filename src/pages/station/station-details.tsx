@@ -710,7 +710,7 @@ const StationDetails: React.FC = () => {
                 <label className="text-sm font-medium mb-2 block">Yoqilg'i turi</label>
                 <select
                   value={selectedFuelType}
-                  onChange={(e) => setSelectedFuelType(e.target.value)}
+                  onChange={(e) => { setSelectedFuelType(e.target.value); setSelectedUnit(''); }}
                   className="w-full p-2 border rounded-md"
                 >
                   <option value="">Yoqilg'i turini tanlang</option>
@@ -725,21 +725,35 @@ const StationDetails: React.FC = () => {
               {/* Unit Selection (manual) */}
               <div>
                 <label className="text-sm font-medium mb-2 block">Birlik</label>
-                <select
-                  value={selectedUnit}
-                  onChange={(e) => setSelectedUnit(e.target.value)}
-                  className="w-full p-2 border rounded-md"
-                >
-                  <option value="">Birlik tanlang</option>
-                  {station.units?.map((unit) => (
-                    <option key={unit.id} value={unit.id}>
-                      {unit.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Avval yoqilg'i turi va sana/vqtni tanlang, so'ng birlikni belgilang
-                </p>
+                {(() => {
+                  const units = (station.units || []) as Array<any>
+                  const unitsToShow = selectedFuelType
+                    ? units.filter(u => Array.isArray(u.supported_options) && u.supported_options.includes(selectedFuelType))
+                    : units
+
+                  return (
+                    <>
+                      <select
+                        value={selectedUnit}
+                        onChange={(e) => setSelectedUnit(e.target.value)}
+                        className="w-full p-2 border rounded-md"
+                        disabled={!selectedFuelType || unitsToShow.length === 0}
+                      >
+                        <option value="">Birlik tanlang</option>
+                        {unitsToShow.map((unit) => (
+                          <option key={unit.id} value={unit.id}>
+                            {unit.name}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {selectedFuelType
+                          ? (unitsToShow.length === 0 ? 'Bu yoqilg\'i turi uchun mos birliklar topilmadi' : 'Yoqilg\'i turiga mos birliklarni tanlang')
+                          : 'Avval yoqilg\'i turini tanlang, so\'ng birlikni belgilang'}
+                      </p>
+                    </>
+                  )
+                })()}
               </div>
 
               {/* Date Selection */}
