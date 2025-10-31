@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useWallet, useTransactions, useTopUpWallet } from '@/config/queries/wallet/wallet.queries'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { formatTashkent } from '@/shared/utils/time'
 
 export default function WalletPage() {
   const { data: walletResp, isLoading: walletLoading } = useWallet()
@@ -85,7 +86,7 @@ export default function WalletPage() {
             <div key={t.id} className="flex items-center justify-between rounded-lg bg-background px-3 py-2">
               <div className="flex flex-col">
                 <span className="text-sm font-medium capitalize">{t.type}</span>
-                <span className="text-xs text-muted-foreground">{new Date(t.created_at).toLocaleString()}</span>
+                <span className="text-xs text-muted-foreground">{formatTashkent(t.created_at)}</span>
               </div>
               <div className="text-right">
                 <span className={`text-sm font-semibold ${t.direction === 'credit' ? 'text-green-600' : 'text-red-600'}`}>

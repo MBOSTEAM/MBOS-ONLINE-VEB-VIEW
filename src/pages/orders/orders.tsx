@@ -6,6 +6,7 @@ import Tabs, { TabsTrigger } from "@/components/ui/tabs"
 import { useState, useMemo } from "react"
 import { Link } from "react-router-dom"
 import { useOrders } from "@/config/queries/orders/order.queries"
+import { formatTashkent } from "@/shared/utils/time"
 
 
 export default function OrdersPage() {
@@ -51,14 +52,7 @@ export default function OrdersPage() {
     }
   }
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleTimeString('uz-UZ', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    })
-  }
+  const formatTime = (dateString: string) => formatTashkent(dateString, 'HH:mm')
 
   const filteredOrders = useMemo(() => {
     if (!ordersData?.data) return []

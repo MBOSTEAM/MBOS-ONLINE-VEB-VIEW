@@ -22,6 +22,7 @@ import {
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import { composeTashkentDateTime, formatTashkent } from '@/shared/utils/time'
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useStationDetails, useStationTimeSlots } from "@/config/queries/stations/station.queries";
@@ -89,21 +90,8 @@ const StationDetails: React.FC = () => {
       return;
     }
 
-    // Extract time from slot.time and combine with selected date
-    // slot.time is the value (e.g., "1970-01-01T13:00:00.000Z" - 13:00 UTC)
-    // We display it as 18:00 in UI (13:00 + 5 hours)
-    // When user selects 18:00, we use the original slot.time value (13:00 UTC)
-    // and combine it with the selected date
-    
-    // Parse slot.time to get UTC hours and minutes
-    const slotTimeUtc = dayjs.utc(selectedTimeSlot);
-    const utcHours = slotTimeUtc.hour();
-    const utcMinutes = slotTimeUtc.minute();
-    
-    // Combine with selected date and keep UTC format
-    // Example: slot.time = "1970-01-01T13:00:00.000Z", selectedDate = "2025-10-29"
-    // Result: "2025-10-29T13:00:00.000Z"
-    const scheduledDateTime = dayjs.utc(`${selectedDate}T${String(utcHours).padStart(2, '0')}:${String(utcMinutes).padStart(2, '0')}:00`).toISOString();
+  // Compose selected date with slot time in Asia/Tashkent and keep +05:00 offset
+  const scheduledDateTime = composeTashkentDateTime(selectedDate, selectedTimeSlot);
 
     createOrder({
       station_id: id!,
@@ -147,63 +135,11 @@ const StationDetails: React.FC = () => {
 
   const tabs = ["About", "Services", "Time Slots", "Feedbacks"];
 
-  // Helper function to extract time from datetime string and convert to Uzbekistan time (+5 hours)
-  const extractTime = (dateTimeString: string): string => {
-    if (!dateTimeString) return ''
-    
-    try {
-      // Try to parse as ISO format (e.g., "2025-10-29T08:00:00.000Z" or "1970-01-01T13:00:00.000Z")
-      if (dateTimeString.includes('T')) {
-        const utcTime = dayjs.utc(dateTimeString)
-        // Add 5 hours for Uzbekistan timezone (UTC+5)
-        const uzbTime = utcTime.add(5, 'hour')
-        return uzbTime.format('HH:mm')
-      }
-      
-      // Try space-separated format (e.g., "2025-10-29 08:00:00")
-      const parts = dateTimeString.split(' ')
-      if (parts.length >= 2) {
-        // Parse as local time and add 5 hours
-        const localTime = dayjs(dateTimeString)
-        const uzbTime = localTime.add(5, 'hour')
-        return uzbTime.format('HH:mm')
-      }
-      
-      // If it's just time format (e.g., "08:00:00" or "08:00")
-      if (dateTimeString.includes(':')) {
-        const timeOnly = dateTimeString.substring(0, 5)
-        const [hours, minutes] = timeOnly.split(':').map(Number)
-        let uzbHours = (hours + 5) % 24
-        return `${String(uzbHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
-      }
-      
-      return dateTimeString
-    } catch (error) {
-      // Fallback: try to extract time from string
-      const parts = dateTimeString.split(' ')
-      if (parts.length >= 2) {
-        const timePart = parts[1]
-        return timePart.substring(0, 5)
-      }
-      return dateTimeString
-    }
-  }
+  // Helper: extract time in Asia/Tashkent (HH:mm)
+  const extractTime = (dateTimeString: string): string => formatTashkent(dateTimeString, 'HH:mm')
 
-  // Helper function to format ISO time string to HH:MM format for display
-  // API sends slot.time in UTC format (e.g., "1970-01-01T13:00:00.000Z")
-  // For display, we add +5 hours to show Uzbekistan time (13:00 UTC → 18:00 UZB)
-  const formatTimeSlot = (isoTimeString: string): string => {
-    if (!isoTimeString) return ''
-    try {
-      // Parse UTC time from slot.time
-      const utcTime = dayjs.utc(isoTimeString)
-      // Add 5 hours for Uzbekistan timezone (UTC+5)
-      const uzbTime = utcTime.add(5, 'hour')
-      return uzbTime.format('HH:mm')
-    } catch {
-      return isoTimeString
-    }
-  }
+  // Helper: format slot time to HH:mm in Asia/Tashkent
+  const formatTimeSlot = (isoTimeString: string): string => formatTashkent(isoTimeString, 'HH:mm')
 
 
   // Loading state
@@ -688,7 +624,7 @@ const StationDetails: React.FC = () => {
                       <span className="text-sm font-medium">{feedback.rating}/5</span>
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {new Date(feedback.created_at).toLocaleDateString('uz-UZ')}
+                      {formatTashkent(feedback.created_at, 'YYYY-MM-DD HH:mm Z')}
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground mb-2">
@@ -950,7 +886,7 @@ const StationDetails: React.FC = () => {
                   {stationOrders.length > 0 ? (
                     stationOrders.map((order) => (
                       <option key={order.id} value={order.id}>
-                        {order.order_number} - {new Date(order.scheduled_datetime).toLocaleDateString('uz-UZ')} - {order.fuel_type}
+                        {order.order_number} - {formatTashkent(order.scheduled_datetime, 'YYYY-MM-DD HH:mm Z')} - {order.fuel_type}
                       </option>
                     ))
                   ) : (
