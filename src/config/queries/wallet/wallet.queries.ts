@@ -38,6 +38,7 @@ export interface Wallet {
 export interface Transaction {
     id: string
     type: string
+    title: string
     direction: 'debit' | 'credit'
     amount: number
     balance_after: number

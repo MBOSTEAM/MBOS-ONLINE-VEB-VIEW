@@ -624,7 +624,7 @@ const StationDetails: React.FC = () => {
                       <span className="text-sm font-medium">{feedback.rating}/5</span>
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {formatTz(feedback.created_at, 'YYYY-MM-DD HH:mm Z')}
+                      {formatTz(feedback.created_at, 'YYYY-MM-DD')}
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground mb-2">

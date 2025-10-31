@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useWallet, useTransactions, useTopUpWallet } from '@/config/queries/wallet/wallet.queries'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { toTashkentTime } from '@/shared/utils/time'
+import { formatTz } from '@/shared/utils/time'
 
 export default function WalletPage() {
   const { data: walletResp, isLoading: walletLoading } = useWallet()
@@ -38,7 +38,7 @@ export default function WalletPage() {
       <div className="flex items-center gap-3">
         <Link to="/profile" className="p-2 rounded-full bg-muted">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M15 18l-6-6 6-6" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M15 18l-6-6 6-6" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </Link>
         <h1 className="text-lg font-semibold">Wallet</h1>
@@ -85,8 +85,8 @@ export default function WalletPage() {
           {transactions.map((t) => (
             <div key={t.id} className="flex items-center justify-between rounded-lg bg-background px-3 py-2">
               <div className="flex flex-col">
-                <span className="text-sm font-medium capitalize">{t.type}</span>
-                <span className="text-xs text-muted-foreground">{toTashkentTime(t.created_at)}</span>
+                <span className="text-sm font-medium capitalize">{t.title}</span>
+                <span className="text-xs text-muted-foreground">{formatTz(t.created_at, 'YYYY-MM-DD')}</span>
               </div>
               <div className="text-right">
                 <span className={`text-sm font-semibold ${t.direction === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
