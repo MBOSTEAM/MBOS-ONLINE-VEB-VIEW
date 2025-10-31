@@ -154,6 +154,7 @@ export interface TimeSlotsParams {
     fuel_type_id: string
     page?: number
     limit?: number
+    all?: boolean
 }
 
 export const useStations = (params?: ListStationsParams) => {
@@ -228,19 +229,17 @@ export const useStationTimeSlots = (id: string, params: TimeSlotsParams) => {
         queryFn: async (): Promise<ApiResponse<TimeSlotsResponse>> => {
             const queryParams = new URLSearchParams()
             queryParams.append('date', params.date)
+            queryParams.append('all', params.all ? 'true' : 'false')
             queryParams.append('fuel_type_id', params.fuel_type_id)
             if (params.page) queryParams.append('page', String(params.page))
             if (params.limit) queryParams.append('limit', String(params.limit))
-
             const url = `${stationEndpoints.timeSlots(id)}?${queryParams.toString()}`
-
             const { data } = await axiosPrivate.get<ApiResponse<TimeSlotsResponse>>(url)
             return data
         },
-        enabled: !!id && !!params.date && !!params.fuel_type_id
+        enabled: !!id && !!params.date && !!params.fuel_type_id 
     })
 }
-
 export const useStationsHighRating = (params?: { page?: number; limit?: number; rating?: string; region_id?: string }) => {
     return useQuery({
         queryKey: ['/api/v1/stations/high-rating', params],

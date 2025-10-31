@@ -40,7 +40,9 @@ const StationDetails: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("About");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDateAll, setSelectedDateAll] = useState(new Date().toISOString().split('T')[0]);
   const [selectedFuelType, setSelectedFuelType] = useState('');
+  const [selectedFuelTypeAll, setSelectedFuelTypeAll] = useState('');
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState('');
   const [selectedUnit, setSelectedUnit] = useState('');
@@ -63,9 +65,15 @@ const StationDetails: React.FC = () => {
 
   const { data: timeSlotsData } = useStationTimeSlots(id!, {
     date: selectedDate,
+    all: false,
     fuel_type_id: selectedFuelType
   });
 
+  const { data: timeSlotsDataAll } = useStationTimeSlots(id!, {
+    date: selectedDateAll,
+    all: true,
+    fuel_type_id: selectedFuelTypeAll
+  });
   // Filter orders for this specific station
   const stationOrders = ordersData?.data?.filter(order => order.station.id === id) || [];
 
@@ -455,8 +463,8 @@ const StationDetails: React.FC = () => {
               <label className="text-sm font-medium mb-2 block">Sana tanlang</label>
               <input
                 type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
+                value={selectedDateAll}
+                onChange={(e) => setSelectedDateAll(e.target.value)}
                 className="w-full p-2 border rounded-md"
                 min={new Date().toISOString().split('T')[0]}
               />
@@ -467,8 +475,8 @@ const StationDetails: React.FC = () => {
               <div>
                 <label className="text-sm font-medium mb-2 block">Yoqilg'i turini tanlang</label>
                 <select
-                  value={selectedFuelType}
-                  onChange={(e) => setSelectedFuelType(e.target.value)}
+                  value={selectedFuelTypeAll}
+                  onChange={(e) => setSelectedFuelTypeAll(e.target.value)}
                   className="w-full p-2 border rounded-md"
                 >
                   <option value="">Yoqilg'i turini tanlang</option>
@@ -487,11 +495,11 @@ const StationDetails: React.FC = () => {
             )}
           </div>
 
-          {selectedFuelType && timeSlotsData?.data ? (
+          {selectedFuelTypeAll && timeSlotsDataAll?.data ? (
             <div className="mt-4">
               <h4 className="font-medium mb-3">Mavjud vaqtlar ({selectedDate})</h4>
               <div className="grid grid-cols-3 gap-2">
-                {timeSlotsData.data.slots.map((slot, index) => (
+                {timeSlotsDataAll.data.slots.map((slot, index) => (
                   <button
                     key={index}
                     disabled={!slot.available}
@@ -510,7 +518,7 @@ const StationDetails: React.FC = () => {
                 ))}
               </div>
             </div>
-          ) : selectedFuelType ? (
+          ) : selectedFuelTypeAll ? (
             <div className="text-center py-8 text-muted-foreground">
               <Calendar className="w-12 h-12 mx-auto mb-2 opacity-50" />
               <p>Bu kunda vaqt bo'shliqlari mavjud emas</p>
