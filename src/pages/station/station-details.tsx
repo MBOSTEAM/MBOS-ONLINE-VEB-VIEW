@@ -22,7 +22,7 @@ import {
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
-import { composeTashkentDateTime, formatTashkent } from '@/shared/utils/time'
+import { timeToTashkentISO, displayTimeTashkent, formatTz } from '@/shared/utils/time'
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useStationDetails, useStationTimeSlots } from "@/config/queries/stations/station.queries";
@@ -91,7 +91,7 @@ const StationDetails: React.FC = () => {
     }
 
   // Compose selected date with slot time in Asia/Tashkent and keep +05:00 offset
-  const scheduledDateTime = composeTashkentDateTime(selectedDate, selectedTimeSlot);
+  const scheduledDateTime = timeToTashkentISO(displayTimeTashkent(selectedTimeSlot), selectedDate);
 
     createOrder({
       station_id: id!,
@@ -136,10 +136,10 @@ const StationDetails: React.FC = () => {
   const tabs = ["About", "Services", "Time Slots", "Feedbacks"];
 
   // Helper: extract time in Asia/Tashkent (HH:mm)
-  const extractTime = (dateTimeString: string): string => formatTashkent(dateTimeString, 'HH:mm')
+  const extractTime = (dateTimeString: string): string => displayTimeTashkent(dateTimeString)
 
   // Helper: format slot time to HH:mm in Asia/Tashkent
-  const formatTimeSlot = (isoTimeString: string): string => formatTashkent(isoTimeString, 'HH:mm')
+  const formatTimeSlot = (isoTimeString: string): string => displayTimeTashkent(isoTimeString)
 
 
   // Loading state
@@ -624,7 +624,7 @@ const StationDetails: React.FC = () => {
                       <span className="text-sm font-medium">{feedback.rating}/5</span>
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {formatTashkent(feedback.created_at, 'YYYY-MM-DD HH:mm Z')}
+                      {formatTz(feedback.created_at, 'YYYY-MM-DD HH:mm Z')}
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground mb-2">
@@ -886,7 +886,7 @@ const StationDetails: React.FC = () => {
                   {stationOrders.length > 0 ? (
                     stationOrders.map((order) => (
                       <option key={order.id} value={order.id}>
-                        {order.order_number} - {formatTashkent(order.scheduled_datetime, 'YYYY-MM-DD HH:mm Z')} - {order.fuel_type}
+                        {order.order_number} - {formatTz(order.scheduled_datetime, 'YYYY-MM-DD HH:mm Z')} - {order.fuel_type}
                       </option>
                     ))
                   ) : (
