@@ -710,14 +710,13 @@ const StationDetails: React.FC = () => {
                 </select>
               </div>
 
-              {/* Unit Selection */}
+              {/* Unit Selection (manual) */}
               <div>
                 <label className="text-sm font-medium mb-2 block">Birlik</label>
                 <select
                   value={selectedUnit}
                   onChange={(e) => setSelectedUnit(e.target.value)}
                   className="w-full p-2 border rounded-md"
-                  disabled
                 >
                   <option value="">Birlik tanlang</option>
                   {station.units?.map((unit) => (
@@ -727,7 +726,7 @@ const StationDetails: React.FC = () => {
                   ))}
                 </select>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Birlik vaqt tanlangandan keyin avtomatik tanlanadi
+                  Avval yoqilg'i turi va sana/vqtni tanlang, so'ng birlikni belgilang
                 </p>
               </div>
 
@@ -755,10 +754,6 @@ const StationDetails: React.FC = () => {
                           disabled={!slot.available}
                           onClick={() => {
                             setSelectedTimeSlot(slot.time);
-                            // Set unit_id from the selected slot
-                            if (slot.unit_id) {
-                              setSelectedUnit(slot.unit_id);
-                            }
                           }}
                           className={`p-2 rounded-lg text-sm font-medium border transition-colors ${selectedTimeSlot === slot.time
                             ? 'bg-primary text-primary-foreground'
