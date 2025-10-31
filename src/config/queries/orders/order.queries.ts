@@ -248,8 +248,9 @@ export const useCreateOrder = () => {
             queryClient.invalidateQueries({ queryKey: [orderEndpoints.all] })
             showSuccess('Buyurtma muvaffaqiyatli yaratildi')
         },
-        onError: () => {
-            showError('Buyurtma yaratishda xatolik yuz berdi')
+        onError: (error: any) => {
+            console.log(error)
+            showError(error.response.data.error.code === 'INVALID_FUEL_PRICE' ? 'Hamyonda yetarli mablag\' mavjud emas' : 'Buyurtma yaratishda xatolik yuz berdi')
         }
     })
 }

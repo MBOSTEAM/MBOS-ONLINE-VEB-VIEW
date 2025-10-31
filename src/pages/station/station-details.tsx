@@ -48,6 +48,7 @@ const StationDetails: React.FC = () => {
   const [refuelingType, setRefuelingType] = useState<'volume' | 'fill_in_amount'>('volume');
   const [refuelingVolume, setRefuelingVolume] = useState<number>(1);
   const [refuelingAmount, setRefuelingAmount] = useState<number>(1000);
+  const [payViaSystem, setPayViaSystem] = useState<boolean>(false);
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [feedbackRating, setFeedbackRating] = useState<number>(5);
   const [feedbackComment, setFeedbackComment] = useState<string>('');
@@ -82,12 +83,14 @@ const StationDetails: React.FC = () => {
       return;
     }
 
-    // Validation for refueling amount/volume
-    if (refuelingType === 'volume' && refuelingVolume < 1) {
-      return;
-    }
-    if (refuelingType === 'fill_in_amount' && refuelingAmount < 1000) {
-      return;
+    // Validation for refueling amount/volume only when paying via system
+    if (payViaSystem) {
+      if (refuelingType === 'volume' && refuelingVolume < 1) {
+        return;
+      }
+      if (refuelingType === 'fill_in_amount' && refuelingAmount < 1000) {
+        return;
+      }
     }
 
     // Compose selected date with slot time in Asia/Tashkent and keep +05:00 offset
@@ -100,8 +103,8 @@ const StationDetails: React.FC = () => {
       vehicle_id: selectedVehicle,
       scheduled_datetime: scheduledDateTime,
       refueling_type: refuelingType,
-      refueling_volume: refuelingType === 'volume' ? refuelingVolume : null,
-      refueling_amount: refuelingType === 'fill_in_amount' ? refuelingAmount : null,
+      refueling_volume: payViaSystem && refuelingType === 'volume' ? refuelingVolume : null,
+      refueling_amount: payViaSystem && refuelingType === 'fill_in_amount' ? refuelingAmount : null,
       payment_method: 'wallet',
       special_instructions: ''
     }, {
@@ -777,60 +780,86 @@ const StationDetails: React.FC = () => {
 
               {/* Refueling Type */}
               <div>
-                <label className="text-sm font-medium mb-2 block">Yoqilg'i miqdori</label>
-                <div className="flex gap-2 mb-2">
-                  <Button
-                    variant={refuelingType === 'volume' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setRefuelingType('volume')}
-                  >
-                    Litr
-                  </Button>
-                  <Button
-                    variant={refuelingType === 'fill_in_amount' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setRefuelingType('fill_in_amount')}
-                  >
-                    Summa
-                  </Button>
-                </div>
-
-                {refuelingType === 'volume' ? (
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setRefuelingVolume(Math.max(1, refuelingVolume - 1))}
-                    >
-                      <Minus className="w-4 h-4" />
-                    </Button>
-                    <input
-                      type="number"
-                      value={refuelingVolume}
-                      onChange={(e) => setRefuelingVolume(Number(e.target.value))}
-                      className="w-full p-2 border rounded-md text-center"
-                      min="1"
-                      placeholder="Litr"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setRefuelingVolume(refuelingVolume + 1)}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ) : (
+                <div className="flex items-center gap-2 mb-3">
                   <input
-                    type="number"
-                    value={refuelingAmount}
-                    onChange={(e) => setRefuelingAmount(Number(e.target.value))}
-                    className="w-full p-2 border rounded-md"
-                    placeholder="Summa kiriting (UZS)"
-                    min="1000"
+                    id="pay-via-system"
+                    type="checkbox"
+                    checked={payViaSystem}
+                    onChange={(e) => setPayViaSystem(e.target.checked)}
+                    className="h-4 w-4"
                   />
-                )}
+                  <label htmlFor="pay-via-system" className="text-sm select-none">
+                    Yoqilg'ini tizim orqali to'lash
+                  </label>
+                </div>
+                {
+                  payViaSystem && (
+                    <div className="">
+
+
+
+                      <label className="text-sm font-medium mb-2 block">Yoqilg'i miqdori</label>
+                      <div className="flex gap-2 mb-2">
+                        <Button
+                          variant={refuelingType === 'volume' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setRefuelingType('volume')}
+                        >
+                          Litr
+                        </Button>
+                        <Button
+                          variant={refuelingType === 'fill_in_amount' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setRefuelingType('fill_in_amount')}
+                        >
+                          Summa
+                        </Button>
+                      </div>
+
+                      {refuelingType === 'volume' ? (
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setRefuelingVolume(Math.max(1, refuelingVolume - 1))}
+                            disabled={!payViaSystem}
+                          >
+                            <Minus className="w-4 h-4" />
+                          </Button>
+                          <input
+                            type="number"
+                            value={refuelingVolume}
+                            onChange={(e) => setRefuelingVolume(Number(e.target.value))}
+                            className="w-full p-2 border rounded-md text-center"
+                            min="1"
+                            placeholder="Litr"
+                            disabled={!payViaSystem}
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setRefuelingVolume(refuelingVolume + 1)}
+                            disabled={!payViaSystem}
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <input
+                          type="number"
+                          value={refuelingAmount}
+                          onChange={(e) => setRefuelingAmount(Number(e.target.value))}
+                          className="w-full p-2 border rounded-md"
+                          placeholder="Summa kiriting (UZS)"
+                          min="1000"
+                          disabled={!payViaSystem}
+                        />
+                      )}
+                    </div>
+                  )
+                }
               </div>
+
 
               {/* Action Buttons */}
               <div className="flex gap-2 pt-4">
@@ -844,7 +873,17 @@ const StationDetails: React.FC = () => {
                 <Button
                   className="flex-1"
                   onClick={handleCreateOrder}
-                  disabled={isCreatingOrder || !selectedVehicle || !selectedFuelType || !selectedUnit || !selectedTimeSlot || (refuelingType === 'volume' && refuelingVolume < 1) || (refuelingType === 'fill_in_amount' && refuelingAmount < 1000)}
+                  disabled={
+                    isCreatingOrder ||
+                    !selectedVehicle ||
+                    !selectedFuelType ||
+                    !selectedUnit ||
+                    !selectedTimeSlot ||
+                    (payViaSystem && (
+                      (refuelingType === 'volume' && refuelingVolume < 1) ||
+                      (refuelingType === 'fill_in_amount' && refuelingAmount < 1000)
+                    ))
+                  }
                 >
                   {isCreatingOrder ? 'Yaratilmoqda...' : 'Band qilish'}
                 </Button>
