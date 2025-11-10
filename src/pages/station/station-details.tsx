@@ -727,8 +727,12 @@ const StationDetails: React.FC = () => {
                 <label className="text-sm font-medium mb-2 block">Birlik</label>
                 {(() => {
                   const units = (station.units || []) as Array<any>
+                  // supported_options is an array of option objects, not an array of ids.
+                  // Previously the code used `includes(selectedFuelType)` which attempted
+                  // to find a string inside an array of objects and always returned false.
+                  // Fix: check if any supported option object has an id matching the selectedFuelType.
                   const unitsToShow = selectedFuelType
-                    ? units.filter(u => Array.isArray(u.supported_options) && u.supported_options.includes(selectedFuelType))
+                    ? units.filter(u => Array.isArray(u.supported_options) && u.supported_options.some((so: any) => so.id === selectedFuelType))
                     : units
 
                   return (
