@@ -15,7 +15,7 @@ import { useOrders } from "@/config/queries/orders/order.queries";
 import { formatTz } from "@/shared/utils/time";
 
 export default function OrdersPage() {
-  const [tab, setTab] = useState<string>("today");
+  const [tab, setTab] = useState<string>("pending");
 
   const { data: ordersData, isLoading, error } = useOrders();
 
@@ -200,10 +200,10 @@ export default function OrdersPage() {
 
       <nav className="mb-4">
         <Tabs value={tab} onValueChange={setTab}>
-          <div className="flex gap-2 overflow-x-auto">
+          <div className="flex gap-2 overflow-x-auto pb-3">
+            <TabsTrigger value="pending">Jarayonda</TabsTrigger>
             <TabsTrigger value="today">Bugun</TabsTrigger>
             <TabsTrigger value="yesterday">Kecha</TabsTrigger>
-            <TabsTrigger value="pending">Kutilmoqda</TabsTrigger>
             <TabsTrigger value="confirmed">Tasdiqlangan</TabsTrigger>
             <TabsTrigger value="declined">Bekor qilingan</TabsTrigger>
           </div>
