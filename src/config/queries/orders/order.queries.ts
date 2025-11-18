@@ -217,7 +217,9 @@ export const useOrders = (params?: ListOrdersParams) => {
             const { data } = await axiosPrivate.get<PaginatedApiResponse<OrderListItem[]>>(url)
             // API returns nested data structure: { success, data: { data: [...] } }
             return data
-        }
+        },
+        retry: 1,
+        retryDelay: 1000
     })
 }
 
@@ -251,7 +253,10 @@ export const useCreateOrder = () => {
         },
         onError: (error: any) => {
             console.log(error)
-            showError(error.response.data.error.code === 'INVALID_FUEL_PRICE' ? 'Hamyonda yetarli mablag\' mavjud emas' : 'Buyurtma yaratishda xatolik yuz berdi')
+            const errorMessage = error?.response?.data?.error?.code === 'INVALID_FUEL_PRICE' 
+                ? 'Hamyonda yetarli mablag\' mavjud emas' 
+                : error?.response?.data?.message || error?.message || 'Buyurtma yaratishda xatolik yuz berdi'
+            showError(errorMessage)
         }
     })
 }

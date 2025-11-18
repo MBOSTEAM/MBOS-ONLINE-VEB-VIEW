@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { useVehicleParams, useAddVehicle, useBrandsInfinite, useModelsByBrandInfinite } from '@/config/queries/vehicles/vehicles.queries'
+import { useVehicleParams, useAddVehicle, useBrandsInfinite } from '@/config/queries/vehicles/vehicles.queries'
 
 export default function AddVehicle() {
   const navigate = useNavigate()
@@ -23,11 +23,8 @@ export default function AddVehicle() {
   const [modelSearch, setModelSearch] = useState('')
   const [colorSearch, setColorSearch] = useState('')
 
-  // Brands infinite query
+  // Brands infinite query (fallback if vehicleParams doesn't have brands)
   const { data: brandsData, fetchNextPage: fetchNextBrands, hasNextPage: hasNextBrands, isFetchingNextPage: isLoadingBrands } = useBrandsInfinite(20)
-
-  // Models infinite query
-  const { data: modelsData, fetchNextPage: fetchNextModels, hasNextPage: hasNextModels, isFetchingNextPage: isLoadingModels } = useModelsByBrandInfinite(brandId, 20)
 
   // Colors - use static list or from params if available
   const params = paramsData?.data
@@ -36,70 +33,83 @@ export default function AddVehicle() {
     'Qora', 'Oq', 'Kumush', 'Qizil', 'Ko\'k', 'Yashil', 'Sariq', 'Jigarrang', 'Binafsha', 'Pushti'
   ]
 
+  // API returns colors as string array
   const colors = (params?.colors || defaultColors).map(item => {
     if (typeof item === 'string') return { label: item, value: item }
-    if (typeof item === 'object' && item !== null && 'name' in item) return { label: item.name, value: item.name, id: item.id }
     return { label: String(item), value: String(item) }
   })
 
-  // Process brands data - accumulate all pages
-  const allBrands = brandsData?.pages.flatMap(page => page.data) || []
-
+  // Process brands data - use from vehicleParams (API returns brands with models inside)
+  const allBrandsFromParams = params?.brands || []
+  const allBrandsFromInfinite = brandsData?.pages.flatMap(page => page.data) || []
+  
+  // Prefer params if available, otherwise use infinite query
+  const allBrands = allBrandsFromParams.length > 0 ? allBrandsFromParams : allBrandsFromInfinite
 
   const brandsOptions = allBrands.map(item => {
+    // API returns brands as { id: string, name: string, models: [...], country?: string }
+    if (typeof item === 'object' && item !== null && 'name' in item) {
+      return { 
+        label: item.name, 
+        value: String(item.id), 
+        id: item.id, 
+        name: item.name,
+        models: 'models' in item ? (item as any).models : []
+      }
+    }
     if (typeof item === 'string') return { label: item, value: item }
-    if (typeof item === 'object' && item !== null && 'name' in item) return { label: item.name, value: item.id || item.name, id: item.id }
     return { label: String(item), value: String(item) }
   })
 
 
-  // Process models data - accumulate all pages
-  const allModels = modelsData?.pages.flatMap(page => {
-    // Check if page.data is an array or an object with arrays
-    if (Array.isArray(page.data)) {
-      return page.data
+  // Process models data - get from selected brand's models array
+  // API returns brands with models inside each brand object
+  const selectedBrand = brandsOptions.find(b => b.value === brandId)
+  const allModelsFromBrand = selectedBrand && 'models' in selectedBrand 
+    ? (selectedBrand as any).models || []
+    : []
+  
+  const modelsOptions = allModelsFromBrand.map((item: any) => {
+    // API returns models as { id: string, name: string, colors?: string[] }
+    if (typeof item === 'object' && item !== null && 'name' in item) {
+      return { 
+        label: item.name, 
+        value: String(item.id), 
+        id: item.id, 
+        name: item.name 
+      }
     }
-    // If it's an object, try to extract models
-    if (typeof page.data === 'object' && page.data !== null) {
-      // Try different possible keys
-      const data = page.data as any
-      if (data.models && Array.isArray(data.models)) return data.models
-      if (data.brand && Array.isArray(data.brand)) return data.brand
-    }
-    return []
-  }) || []
-
-  const modelsOptions = allModels.map(item => {
     if (typeof item === 'string') return { label: item, value: item }
-    if (typeof item === 'object' && item !== null && 'name' in item) return { label: item.name, value: item.id || item.name, id: item.id }
     return { label: String(item), value: String(item) }
   })
 
 
   // Filter functions
-  const filteredBrands = brandsOptions.filter(brand => 
+  const filteredBrands = brandsOptions.filter((brand: { label: string; value: string }) => 
     brand.label.toLowerCase().includes(brandSearch.toLowerCase())
   )
 
-  const filteredModels = modelsOptions.filter(model => 
+  const filteredModels = modelsOptions.filter((model: { label: string; value: string }) => 
     model.label.toLowerCase().includes(modelSearch.toLowerCase())
   )
 
-  const filteredColors = colors.filter(color => 
+  const filteredColors = colors.filter((color: { label: string; value: string }) => 
     color.label.toLowerCase().includes(colorSearch.toLowerCase())
   )
 
   const handleBrandChange = (value: string) => {
     const selected = brandsOptions.find(b => b.value === value)
     setBrandId(value)
+    // Store the brand name (not ID) for API submission
     setBrandName(selected?.label ?? selected?.value ?? value)
     setModel('') // Reset model when brand changes
     setModelName('')
   }
 
   const handleModelChange = (value: string) => {
-    const selected = modelsOptions.find(m => m.value === value)
+    const selected = modelsOptions.find((m: { label: string; value: string }) => m.value === value)
     setModel(value)
+    // Store the model name (not ID) for API submission
     setModelName(selected?.label ?? selected?.value ?? value)
     setColor('')
     setColorName('')
@@ -117,40 +127,28 @@ export default function AddVehicle() {
     }
   }
 
-  const handleLoadMoreModels = () => {
-    if (hasNextModels && !isLoadingModels) {
-      fetchNextModels()
-    }
-  }
 
   const handleSubmit = () => {
-    // Debug log to see all values
-    console.log('Form values:', {
-      brandName,
-      model,
-      color,
-      plateNumber,
-      year,
-    })
-
-    if (!brandName || !model || !color || !plateNumber || !year) {
+    // Validation
+    if (!brandName || !modelName || !colorName || !plateNumber || !year) {
       alert('Barcha maydonlarni to\'ldiring')
-      console.log('Missing fields:', {
-        brandName: !brandName,
-        model: !model,
-        color: !color,
-        plateNumber: !plateNumber,
-        year: !year
-      })
       return
     }
 
+    // Validate year
+    const yearNum = parseInt(year)
+    if (isNaN(yearNum) || yearNum < 1900 || yearNum > new Date().getFullYear() + 1) {
+      alert('Yil noto\'g\'ri kiritilgan')
+      return
+    }
+
+    // Prepare submit data - API expects brand and model as strings (names)
     const submitData = {
       brand: String(brandName),
-      model: String(model),
-      color: String(color),
-      plate_number: String(plateNumber),
-      year: parseInt(year)
+      model: String(modelName),
+      color: String(colorName),
+      plate_number: String(plateNumber).trim().toUpperCase(),
+      year: yearNum
     }
     
     console.log('Submitting vehicle data:', submitData)
@@ -163,6 +161,7 @@ export default function AddVehicle() {
         },
         onError: (error: any) => {
           console.error('Error adding vehicle:', error)
+          // Error is already handled in useAddVehicle hook
         }
       }
     )
@@ -256,7 +255,7 @@ export default function AddVehicle() {
                 </div>
               ))}
             </div>
-            {hasNextBrands && !isLoadingBrands && (
+            {hasNextBrands && !isLoadingBrands && allBrandsFromParams.length === 0 && (
               <Button
                 variant="outline"
                 onClick={handleLoadMoreBrands}
@@ -286,7 +285,7 @@ export default function AddVehicle() {
               className="mb-4"
             />
             <div className="grid grid-cols-2 gap-4">
-              {filteredModels.map((modelOption) => (
+              {filteredModels.map((modelOption: { label: string; value: string }) => (
                 <div
                   key={modelOption.value}
                   onClick={() => handleModelChange(modelOption.value)}
@@ -299,15 +298,6 @@ export default function AddVehicle() {
                 </div>
               ))}
             </div>
-            {hasNextModels && !isLoadingModels && (
-              <Button
-                variant="outline"
-                onClick={handleLoadMoreModels}
-                className="w-full"
-              >
-                Load More Models
-              </Button>
-            )}
           </div>
         )}
 
@@ -387,9 +377,9 @@ export default function AddVehicle() {
         <Button
           className="w-full"
           onClick={handleSubmit}
-          disabled={isAdding || !brandName || !model || !color || !plateNumber || !year}
+          disabled={isAdding || !brandName || !modelName || !colorName || !plateNumber || !year}
         >
-          {isAdding ? 'Adding...' : 'Complete'}
+          {isAdding ? 'Qo\'shilmoqda...' : 'Tugallash'}
         </Button>
       </div>
     </div>

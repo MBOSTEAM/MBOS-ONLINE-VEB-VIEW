@@ -19,10 +19,26 @@ export interface PaginatedApiResponse<T> {
     }
 }
 
+export interface Brand {
+    id: number
+    name: string
+}
+
+export interface Model {
+    id: number
+    name: string
+    brand_id: number
+}
+
+export interface BrandWithModels extends Brand {
+    models: Model[]
+    country?: string
+}
+
 export interface VehicleParams {
-    brands: Array<string | { id: string; name: string }>
-    models: Array<string | { id: string; name: string }>
-    colors: Array<string | { id: string; name: string }>
+    brands: BrandWithModels[]
+    models?: Model[]
+    colors: string[]
 }
 
 export interface UserVehicle {
@@ -56,10 +72,9 @@ export interface AddVehicleResponse {
 }
 
 export interface UpdateVehicleRequest {
-    color?: string
     brand?: string
     model?: string
-    year?: number
+    color?: string
     plate_number?: string
 }
 
@@ -82,18 +97,37 @@ export const useVehicleParams = () => {
             const response = await axiosPrivate.get<ApiResponse<VehicleParams>>(
                 userEndpoints.vehicleParams
             )
+            // API returns nested structure: { success, data: { brands, models, colors } }
             return response.data
         }
     })
 }
 
-export const useUserVehicles = () => {
+export interface ListVehiclesParams {
+    page?: number
+    limit?: number
+    plate_number?: string
+    color?: string
+    model?: string
+    brand?: string
+}
+
+export const useUserVehicles = (params?: ListVehiclesParams) => {
     return useQuery({
-        queryKey: [userEndpoints.vehicles],
+        queryKey: [userEndpoints.vehicles, params],
         queryFn: async (): Promise<PaginatedApiResponse<UserVehicle[]>> => {
-            const response = await axiosPrivate.get<PaginatedApiResponse<UserVehicle[]>>(
-                userEndpoints.vehicles
-            )
+            const queryParams = new URLSearchParams()
+            if (params?.page) queryParams.append('page', String(params.page))
+            if (params?.limit) queryParams.append('limit', String(params.limit))
+            if (params?.plate_number) queryParams.append('plate_number', params.plate_number)
+            if (params?.color) queryParams.append('color', params.color)
+            if (params?.model) queryParams.append('model', params.model)
+            if (params?.brand) queryParams.append('brand', params.brand)
+
+            const queryString = queryParams.toString()
+            const url = queryString ? `${userEndpoints.vehicles}?${queryString}` : userEndpoints.vehicles
+
+            const response = await axiosPrivate.get<PaginatedApiResponse<UserVehicle[]>>(url)
             return response.data
         }
     })
@@ -114,8 +148,10 @@ export const useAddVehicle = () => {
             queryClient.invalidateQueries({ queryKey: [userEndpoints.vehicles] })
             showSuccess('Transport vositasi muvaffaqiyatli qo\'shildi')
         },
-        onError: () => {
-            showError('Transport vositasi qo\'shishda xatolik yuz berdi')
+        onError: (error: any) => {
+            console.log(error)
+            const errorMessage = error?.response?.data?.message || error?.message || 'Transport vositasi qo\'shishda xatolik yuz berdi'
+            showError(errorMessage)
         }
     })
 }
