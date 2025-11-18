@@ -46,15 +46,15 @@ export interface StationDetails extends StationPreview {
 
 export interface FuelTypeInfo {
     id: string
-    type: string
+    type?: string
     name?: string
     price: number
 }
 
 export interface RefuelingInfo {
-    type: string
-    volume?: number
-    amount?: number
+    type: string | null
+    volume?: number | null
+    amount?: number | null
     estimated_cost?: number
     requested_volume?: number
     actual_volume?: number | null
@@ -114,18 +114,24 @@ export interface OrderDetails {
     id: string
     order_number: string
     status: string
-    station: StationDetails
+    station: StationDetails & {
+        service?: {
+            title?: string
+            address?: string
+        }
+    }
     scheduled_datetime: string
     arrived_at: string | null
     started_at: string | null
     completed_at: string | null
     fuel_type: FuelTypeInfo
-    unit: UnitInfo
+    unit?: UnitInfo
     refueling: RefuelingInfo
-    payment: PaymentInfo & FeesInfo
+    payment: PaymentInfo
+    fees?: FeesInfo
     attendant: any | null
     qr_code: string
-    timeline: TimelineEvent[]
+    timeline?: TimelineEvent[]
     created_at: string
 }
 

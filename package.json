@@ -26,6 +26,7 @@
     "dayjs": "^1.11.18",
     "embla-carousel-react": "^8.6.0",
     "lucide-react": "^0.548.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.65.0",
