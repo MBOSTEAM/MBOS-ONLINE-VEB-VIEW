@@ -448,9 +448,17 @@ const StationDetails: React.FC = () => {
                 return (
                   <div key={index} className="flex items-center gap-2">
                     <Clock className="w-4 h-4" />
-                    <span>
-                      {dayName}: {extractTime(workTime.from_time)} -{" "}
-                      {extractTime(workTime.to_time)}
+                    <span
+                      className={
+                        workTime.is_weekend ? "text-red-500 font-medium" : ""
+                      }
+                    >
+                      {dayName}:{" "}
+                      {workTime.is_weekend
+                        ? "Dam olish kuni"
+                        : `${extractTime(workTime.from_time)} - ${extractTime(
+                            workTime.to_time
+                          )}`}
                     </span>
                   </div>
                 );
